@@ -5,3 +5,6 @@ langchain
 langgraph
 pydantic
 python-multipart
+langchain_ollama
+langchain_tavily
+python-dotenv

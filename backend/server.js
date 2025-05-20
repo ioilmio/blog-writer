@@ -23,8 +23,8 @@ const llm = new ChatOllama({
 // Template for generating blog articles
 const BLOG_TEMPLATE = `
 Scrivi un articolo di blog in italiano sul seguente argomento: {topic}
-L'articolo deve essere informativo e piacevole da leggere in 2-3 minuti circa 60-700 parole.
-L'articolo si rivolge aun pubblico di consumatori interessati all'argomento, quindi evita tecnicismi e termini troppo specialistici.
+L'articolo deve essere informativo e piacevole da leggere in 2-3 minuti circa 600-700 parole.
+L'articolo si rivolge a un pubblico di consumatori interessati all'argomento, quindi evita tecnicismi e termini troppo specialistici.
 Contesto aggiuntivo: {additionalContext}
 
 L'articolo deve seguire questo formato:
@@ -103,11 +103,11 @@ fastify.post('/api/generate', async (request, reply) => {
       topic,
       additionalContext
     });
-    console.log(formattedPrompt);
+    console.log("formattedPrompt", formattedPrompt);
     
     
-    const response = await llm.call(formattedPrompt);
-    console.log(response);
+    const response = await llm.invoke(formattedPrompt);
+    console.log(response, "response");
     
     const article = JSON.parse(response);
     
@@ -133,15 +133,16 @@ fastify.post('/api/save', async (request, reply) => {
     
     // Create markdown content
     const markdown = `---
-title: "${article.title}"
-date: "${article.date}"
-excerpt: "${article.excerpt}"
-slug: "${article.slug}"
-topic: "${article.topic}"
-tags: ${JSON.stringify(article.tags)}
----
+                      title: "${article.title}"
+                      date: "${article.date}"
+                      excerpt: "${article.excerpt}"
+                      slug: "${article.slug}"
+                      topic: "${article.topic}"
+                      tags: ${JSON.stringify(article.tags)}
+                      ---
 
-${article.content}`;
+                      ${article.content}
+                      `;
     
     // Create directory if it doesn't exist
     await mkdir(topicDir, { recursive: true });
