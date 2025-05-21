@@ -82,11 +82,40 @@ function App() {
                 Additional Context (optional)
               </label>
               <textarea
-                {...register('additionalContext')}
+                {...register('additional_context')}
                 className="w-full p-2 border rounded-md"
                 rows={4}
                 placeholder="Add any additional context..."
               />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Customer Audience
+              </label>
+              <input
+                type="checkbox"
+                {...register('customer_audience')}
+                className="mr-2"
+              />
+              <span className="text-sm text-gray-600">If checked, the article will be focused on customers. If unchecked, it will be focused on professionals.</span>
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Tipo di informazione
+              </label>
+              <select
+                {...register('information_type')}
+                className="w-full p-2 border rounded-md"
+                defaultValue=""
+              >
+                <option value="">Seleziona il tipo di informazione...</option>
+                <option value="guide pratiche">Guide pratiche</option>
+                <option value="ultime tendenze">Ultime tendenze</option>
+                <option value="normative">Normative</option>
+                <option value="consigli per professionisti">Consigli per professionisti</option>
+                <option value="consigli per clienti">Consigli per clienti</option>
+              </select>
             </div>
             
             <button

@@ -10,5 +10,7 @@ export interface Article {
 
 export interface ArticleInput {
   topic: string;
-  additionalContext?: string;
+  additional_context?: string;
+  customer_audience?: boolean;
+  information_type?: string;
 }
