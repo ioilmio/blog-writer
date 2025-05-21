@@ -19,7 +19,7 @@ llm = ChatOllama(
 )
 # Template for generating blog articles
 BLOG_TEMPLATE = """
-Scrivi un articolo di blog in italiano, altamente informativo e accattivante, sull'argomento: \"{topic}\".
+Scrivi un articolo di blog in italiano, altamente informativo e accattivante,per il mercato e il pubblico italiano sull'argomento: \"{topic}\".
 
 Obiettivo: Fornire informazioni utili e pratiche al pubblico di {audience} per aiutarli a comprendere meglio il servizio/mestiere e a fare scelte informate o a migliorare la loro attività.
 
@@ -50,7 +50,8 @@ Struttura dell'articolo:
 
 Contesto aggiuntivo per l'articolo: {additional_context}
 (Questo contesto includerà il riassunto dei risultati di ricerca web e, se implementato, il tipo di informazione specifica per l'articolo per un contesto più ricco.)
-
+Correggi eventuali typos, errori di sintassi o grammaticali, non usare inglesismi inutili.
+Non menzionare altre piattaforme come ChronoShare o ProntoPro che sono competitor di Mestieri.pro.Se devi menzionarle sii sempre in favore di Mestieri.pro nella comparazione.
 {format_instructions}
 """
 

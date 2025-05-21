@@ -1,7 +1,7 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from typing import List, Optional, Annotated, Literal
+from typing import List, Optional
 from datetime import datetime
 from langgraph.graph.message import add_messages
 from langchain_core.messages import AnyMessage
@@ -48,6 +48,8 @@ class ArticleInput(BaseModel):
     additional_context: Optional[str] = None
     customer_audience: Optional[bool] = None
     information_type: Optional[str] = None
+    output_dir: Optional[str] = None  # NEW
+    autosave: Optional[bool] = False  # NEW
 
 class Article(BaseModel):
     title: str
@@ -57,16 +59,18 @@ class Article(BaseModel):
     topic: str
     tags: List[str]
     content: str
+    output_dir: Optional[str] = None  # NEW
 
 @app.post("/api/save")
 async def save_article(article: Article):
     try:
-        # Create directory based on slugified topic
-        topic_dir = slugify(article.topic)
-        os.makedirs(topic_dir, exist_ok=True)
-        
-        # Create file path using slugified title
-        file_path = os.path.join(topic_dir, f"{article.slug}.md")
+        # Always use output_dir if provided, else fallback to blog-post/[slugified topic]
+        if article.output_dir:
+            save_dir = article.output_dir
+        else:
+            save_dir = os.path.join("blog-post", slugify(article.topic))
+        os.makedirs(save_dir, exist_ok=True)
+        file_path = os.path.join(save_dir, f"{article.slug}.md")
         
         # Generate markdown content
         markdown_content = f"""
@@ -85,9 +89,10 @@ tags: {article.tags}
         # Save the file
         with open(file_path, "w", encoding="utf-8") as f:
             f.write(markdown_content)
-            
+        print(f"[SAVE] Article saved to {file_path}")
         return {"message": "Article saved successfully", "path": file_path}
     except Exception as e:
+        print(f"[ERROR] Failed to save article: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 from backend.llm import generate_article as llm_generate_article
@@ -98,6 +103,7 @@ class OverallState(BaseModel):
     additional_context: str = ""
     customer_audience: Optional[bool] = None
     information_type: Optional[str] = None
+    output_dir: Optional[str] = None  # NEW
     search_query: str = ""
     web_search_results: list = []
     sources: list = []
@@ -188,6 +194,8 @@ def finalize_article(state: OverallState):
     print("**************************\n[DEBUG] finalize_article state.article:", state.article)
     now = datetime.now().strftime("%Y-%m-%d")
     slug = slugify(state.article['title'], lowercase=True)
+    # Always propagate output_dir for saving
+    output_dir = state.output_dir or os.path.join("blog-post", slugify(state.topic))
     return Article(
         title=state.article['title'],
         date=now,
@@ -195,7 +203,8 @@ def finalize_article(state: OverallState):
         slug=slug,
         topic=state.topic,
         tags=state.article['tags'],
-        content=state.article['content']
+        content=state.article['content'],
+        output_dir=output_dir
     )
 
 # Build the workflow graph
@@ -224,20 +233,23 @@ async def generate_article_endpoint(article_input: ArticleInput):
             additional_context=article_input.additional_context,
             customer_audience=article_input.customer_audience,
             information_type=article_input.information_type,
+            output_dir=article_input.output_dir,  # NEW
         )
         result = await workflow.ainvoke(state)
-        # Only return the finalized article, not the full workflow state
+        article = None
         if isinstance(result, Article):
-            return result
-        if isinstance(result, dict) and "title" in result:
-            return result
-        if "article" in result and isinstance(result["article"], dict):
+            article = result.model_dump()
+        elif isinstance(result, dict) and "title" in result:
+            article = result
+        elif "article" in result and isinstance(result["article"], dict):
             article = result["article"]
-            # Defensive: add date, slug, topic if needed
             article["date"] = result.get("date") or datetime.now().strftime("%Y-%m-%d")
             article["slug"] = result.get("slug") or slugify(article["title"], lowercase=True)
             article["topic"] = result.get("topic") or state.topic
-            return article
-        raise HTTPException(status_code=500, detail="Article not generated")
+            article["output_dir"] = state.output_dir  # NEW
+        # Only auto-save if autosave flag is set
+        if article and getattr(article_input, "autosave", False):
+            await save_article(Article(**article))
+        return article if article else HTTPException(status_code=500, detail="Article not generated")
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

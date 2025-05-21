@@ -1,0 +1,308 @@
+  [{
+    "name": "Servizi per la persona",
+    "subs": [
+      {
+        "name": "Barbieri e parrucchieri",
+        "description": "Taglio e cura dei capelli e della barba",
+        "professionalCopy":
+          "Riempi la tua agenda senza svendere il tuo talento! | Con Mestieri.pro: clienti diretti, zero commissioni nascoste. | Pubblica le tue specialità, gestisci le prenotazioni e incassa. | Dì addio alle piattaforme che trattengono i tuoi guadagni!",
+        "keywords":
+          "trovare clienti parrucchiere, lavoro parrucchiere, clienti barbiere, come trovare clienti parrucchiera online, piattaforma per barbieri senza commissioni, app per gestire appuntamenti parrucchieri, aumentare visibilità parrucchiere, lavorare come barbiere, opportunità lavoro parrucchieri, ingaggi barbiere, alternativa a ProntoPro parrucchieri, guadagnare di più barbiere, servizi per barbieri e parrucchieri, parrucchiere zero commissioni, barbiere senza costi nascosti, clienti diretti parrucchiere"
+      },
+      {
+        "name": "Estetisti",
+        "description": "Trattamenti estetici viso e corpo",
+        "professionalCopy":
+          "Valorizza la tua professionalità e attira clienti per trattamenti di alto livello! Su Mestieri.pro, niente intermediari, pagamenti sicuri con commissioni minime (solo 2%!). Crea offerte esclusive, costruisci la tua reputazione e massimizza i tuoi profitti. Basta regalare margini!",
+        "keywords":
+          "trovare clienti estetista, lavoro estetista, clienti centro estetico, come trovare clienti per trattamenti estetici, piattaforma per estetiste senza commissioni, gestione appuntamenti estetista, aumentare clienti estetica, offerte lavoro estetista, collaborazioni estetiste, guadagnare di più con estetica, alternativa a ProntoPro estetiste, estetista zero commissioni, estetista pagamenti sicuri, massimizzare profitti estetica"
+      },
+      {
+        "name": "Nail art",
+        "description": "Decorazione e cura delle unghie",
+        "professionalCopy":
+          "Trasforma la tua arte sulle unghie in un business di successo! Mostra i tuoi lavori, ricevi richieste dirette e gestisci tutto dall'app. Con l'abbonamento fisso, nessuna commissione sui tuoi guadagni. Fatti pagare il giusto per la tua creatività, senza intermediari!",
+        "keywords":
+          "trovare clienti nail art, lavoro onicotecnica, clienti ricostruzione unghie, come trovare clienti per smalto semipermanente, piattaforma per nail artist, gestione appuntamenti unghie, aumentare clienti nail art, offerte lavoro onicotecnica, guadagnare di più nail artist, alternativa a ProntoPro onicotecniche, onicotecnica senza commissioni, guadagnare con nail art, clienti diretti onicotecnica"
+      },
+      {
+        "name": "Massaggi",
+        "description": "Trattamenti rilassanti e terapeutici",
+        "professionalCopy":
+          "Offri benessere e ricevi il giusto compenso! Trova clienti senza intermediari che erodono i tuoi margini. Con Mestieri.pro: abbonamento trasparente (€14,90/mese), contatti illimitati, pagamenti sicuri e tieni il 98% di ogni incasso. Rilassati e guadagna di più!",
+        "keywords":
+          "trovare clienti massaggiatore, lavoro massaggiatore, clienti massaggi, come trovare clienti per massaggi a domicilio, piattaforma per massaggiatori senza commissioni, gestione appuntamenti massaggi, aumentare clienti studio massaggi, offerte lavoro massaggiatore, guadagnare di più massaggi, alternativa a ProntoPro massaggiatori, massaggiatore zero commissioni, massaggiatore pagamenti sicuri, tieni guadagni massaggiatore"
+      },
+      {
+        "name": "Personal Trainer",
+        "description": "Fatti allenare personalmente a casa o dove preferisci",
+        "professionalCopy":
+          "Trova clienti motivati direttamente nella tua zona! Con il nostro abbonamento: chat illimitata con i clienti, gestione appuntamenti integrata, e pagamenti garantiti. Spendi il 75% in meno rispetto a HomeDeal mantenendo il 100% dei tuoi guadagni!",
+        "keywords":
+          "trovare clienti personal trainer, lavoro personal trainer, clienti PT online, come trovare clienti per allenamento personalizzato, piattaforma per personal trainer, gestione appuntamenti fitness, aumentare clienti personal trainer, offerte lavoro personal trainer, guadagnare di più personal trainer, alternativa a HomeDeal personal trainer, personal training senza commissioni, personal trainer chat clienti, personal trainer pagamenti garantiti, personal trainer 100% guadagno"
+      },
+      {
+        "name": "Coach per salute e benessere",
+        "description":
+          "Supporto personalizzato per migliorare la propria salute fisica e mentale",
+        "professionalCopy":
+          "Aiuta i tuoi clienti a raggiungere i loro obiettivi di benessere e costruisci la tua attività! Connessione diretta, gestione semplificata e pagamenti garantiti con commissioni bassissime. Concentrati sul coaching, non sulla ricerca di clienti a vuoto. Iscriviti e fai la differenza!",
+        "keywords":
+          "trovare clienti coach benessere, lavoro coach salute, clienti coaching online, come trovare clienti per consulenza benessere, piattaforma per coach senza commissioni, gestione appuntamenti coaching, aumentare clienti coaching, offerte lavoro coach benessere, guadagnare di più coach, alternativa a piattaforme coaching costose, coach zero commissioni, coach pagamenti garantiti, coach benessere online"
+      },
+      {
+        "name": "Fotografi",
+        "description": "Servizi fotografici professionali",
+        "professionalCopy":
+          "Cattura momenti, non commissioni! Mostra il tuo portfolio, ricevi richieste dirette per servizi fotografici ed eventi. Con l'abbonamento Mestieri.pro, gestisci tutto e incassa il giusto compenso. Dimentica le percentuali esose delle agenzie e piattaforme!",
+        "keywords":
+          "trovare clienti fotografo, lavoro fotografo, ingaggi fotografici, come trovare clienti per servizi fotografici, piattaforma per fotografi senza commissioni, gestione servizi fotografici, aumentare clienti fotografo eventi, offerte lavoro fotografo, guadagnare di più fotografia, alternativa a agenzie fotografiche, fotografo zero commissioni, fotografo clienti diretti, incassa compenso fotografo"
+      },
+      {
+        "name": "Dog-sitter",
+        "description": "Cura e assistenza domiciliare per cani",
+        "professionalCopy":
+          "La passione per gli animali merita il giusto guadagno! Trova proprietari che cercano proprio te, gestisci le prenotazioni e ricevi pagamenti sicuri direttamente. Il nostro abbonamento (€14,90/mese) ti libera da commissioni elevate. Più coccole, più guadagni!",
+        "keywords":
+          "trovare clienti dog sitter, lavoro petsitter, clienti pensione per cani, come trovare clienti per dog walking, piattaforma per dog sitter senza commissioni, gestione prenotazioni dog sitter, aumentare clienti assistenza cani, offerte lavoro dog sitter, guadagnare di più dog sitting, alternativa a piattaforme petsitter costose, dog sitter zero commissioni, dog sitter pagamenti sicuri, guadagno dog sitting"
+      },
+      {
+        "name": "Altri servizi per la persona",
+        "description": "Servizi vari per benessere e cura",
+        "professionalCopy":
+          "Qualunque sia la tua specializzazione nella cura della persona, trova clienti senza intermediari! Con Mestieri.pro: abbonamento chiaro, contatti diretti, pagamenti sicuri e commissioni minime. Valorizza la tua professionalità e tieni i tuoi guadagni!",
+        "keywords":
+          "trovare clienti servizi alla persona generici, lavoro servizi cura della persona, clienti benessere personale, come trovare clienti per servizi alla persona, piattaforma per professionisti servizi alla persona, aumentare clienti servizi personali, offerte lavoro servizi alla persona, guadagnare di più servizi alla persona, alternativa a piattaforme generiche, servizi alla persona senza intermediari, servizi alla persona pagamenti sicuri, tieni guadagni servizi persona"
+      }
+    ]
+  },
+  {
+    "name": "Servizi per la casa",
+    "subs": [
+      {
+        "name": "Cura del verde",
+        "description": "Manutenzione giardini e spazi esterni",
+        "professionalCopy":
+          "Fai fiorire il tuo business di giardinaggio! Trova clienti nella tua zona, mostra i tuoi lavori migliori e ottieni incarichi a tariffa piena. Con il piano Kit Tecnico (€14,90/mese), zero commissioni nascoste, pagamenti sicuri (solo 2% fee). Basta preventivi a vuoto su piattaforme costose!",
+        "keywords":
+          "trovare clienti giardiniere, lavoro cura del verde, clienti manutenzione giardini, come trovare lavori giardinaggio, piattaforma per giardinieri senza commissioni, gestione lavori giardini, aumentare clienti cura del verde, offerte lavoro giardiniere, guadagnare di più giardiniere, alternativa a piattaforme giardinaggio costose, giardiniere zero commissioni, giardiniere pagamenti sicuri, guadagno giardinaggio"
+      },
+      {
+        "name": "Pulizie",
+        "description": "Servizi di pulizia domestica e professionale",
+        "professionalCopy":
+          "Trasforma la pulizia in profitto costante! Ricevi richieste dirette da privati e aziende, costruisci un rapporto di fiducia e gestisci i pagamenti senza intermediari. Abbonamento conveniente (€14,90/mese), zero commissioni sui tuoi servizi. La tua professionalità merita il 100%!",
+        "keywords":
+          "trovare clienti pulizie, lavoro addetto pulizie, clienti impresa di pulizie, come trovare lavori pulizie domestiche, piattaforma per pulizie senza commissioni, gestione servizi pulizia, aumentare clienti pulizie uffici, offerte lavoro pulizie, guadagnare di più pulizie professionali, alternativa a piattaforme pulizie costose, pulizie zero commissioni, pulizie 100% guadagno, clienti diretti pulizie"
+      },
+      {
+        "name": "Muratori",
+        "description": "Costruzione e manutenzione strutture murarie",
+        "professionalCopy":
+          "Basta pagare per preventivi che non portano a nulla! Su Mestieri.pro trovi richieste di lavori edili, contatti i clienti direttamente e concordi il prezzo. Il nostro abbonamento fisso (€14,90/mese) ti fa risparmiare un sacco rispetto ai costi per contatto di ProntoPro. Costruisci il tuo futuro, non le commissioni altrui!",
+        "keywords":
+          "trovare clienti muratore, lavoro edile, clienti ristrutturazioni, come trovare lavori di muratura, piattaforma per muratori senza commissioni, gestione lavori edili, aumentare clienti impresa edile, offerte lavoro muratore, guadagnare di più lavori edili, alternativa a ProntoPro muratori, lavori edili senza commissioni, muratore zero commissioni, muratore stop preventivi a vuoto"
+      },
+      {
+        "name": "Falegnami",
+        "description": "Realizzazione e riparazione mobili in legno",
+        "professionalCopy":
+          "Il tuo lavoro artigianale merita il giusto valore! Ricevi richieste per mobili su misura e riparazioni, contatta direttamente i clienti e definisci i termini. Con Mestieri.pro, pagamenti sicuri e commissioni minime (2%). Concentrati sulla qualità, non sulle fee delle piattaforme!",
+        "keywords":
+          "trovare clienti falegname, lavoro falegname, clienti mobili su misura, come trovare lavori falegnameria, piattaforma per falegnami senza commissioni, gestione lavori legno, aumentare clienti falegname, offerte lavoro falegname, guadagnare di più falegname, alternativa a piattaforme falegnami costose, falegname zero commissioni, falegname pagamenti sicuri, tieni guadagno falegname"
+      },
+      {
+        "name": "Elettricisti",
+        "description": "Impianti elettrici e riparazioni elettriche",
+        "professionalCopy":
+          "Interventi elettrici pagati a tariffa piena? Sì, con Mestieri.pro! Il piano Kit Tecnico (€14,90/mese) ti dà 5 offerte attive, contatti diretti, pagamenti sicuri (solo 2% commissione). Dimentica i costi per singolo contatto di ProntoPro e massimizza i guadagni!",
+        "keywords":
+          "trovare clienti elettricista, lavoro elettricista, clienti impianti elettrici, come trovare lavori elettrici, piattaforma per elettricisti senza commissioni, gestione interventi elettricista, aumentare clienti elettricista, pronto intervento elettricista lavoro, offerte lavoro elettricista, guadagnare di più elettricista, alternativa a ProntoPro elettricisti, elettricista zero commissioni, elettricista pagamenti sicuri, massimizzare guadagni elettricista"
+      },
+      {
+        "name": "Idraulici",
+        "description": "Impianti idrici e riparazioni idrauliche",
+        "professionalCopy":
+          "Ottieni lavori di idraulica a tariffa piena senza intermediari! | Con il piano Kit Tecnico a €14,90/mese puoi : pubblicare 5 offerte, ricevere pagamenti sicuri con solo il 2% di commissioni | Costruisci la tua reputazione con recensioni davvero verificate che fidelizzano i clienti. | Niente più costi a consumo come altre piattaforme!",
+        "keywords":
+          "trovare clienti idraulico, lavoro idraulico, clienti riparazioni idrauliche, come trovare lavori idraulica, piattaforma per idraulici senza commissioni, gestione interventi idraulico, aumentare clienti idraulico, pronto intervento idraulico lavoro, offerte lavoro idraulico, guadagnare di più idraulico, alternativa a ProntoPro idraulici, lavori idraulica senza commissioni, idraulico zero commissioni, idraulico pagamenti sicuri, idraulico niente costi a consumo"
+      },
+      {
+        "name": "Pittori",
+        "description": "Imbiancatura e verniciatura pareti",
+        "professionalCopy":
+          "Dai colore alle case, non ai bilanci delle piattaforme! Fatti trovare da clienti nella tua zona, mostra i tuoi lavori migliori e ricevi richieste dirette. Con l'abbonamento Mestieri.pro (€14,90/mese), tieni i tuoi guadagni e costruisci la tua reputazione. Basta commissioni che sbiadiscono il tuo profitto!",
+        "keywords":
+          "trovare clienti pittore, lavoro imbianchino, clienti imbiancatura, come trovare lavori imbiancatura e verniciatura, piattaforma per pittori senza commissioni, gestione lavori imbianchino, aumentare clienti pittore, offerte lavoro imbianchino, guadagnare di più pittore, alternativa a piattaforme pittori costose, pittore zero commissioni, pittore tieni guadagni, pittore senza commissioni"
+      },
+      {
+        "name": "Serramentisti",
+        "description":
+          "Installazione, riparazione e manutenzione di serramenti e infissi",
+        "professionalCopy":
+          "Installa successo, non costi imprevisti! Ricevi richieste per serramenti e infissi, contatta i clienti direttamente e gestisci tutto con facilità. Abbonamento mensile fisso (€14,90/mese), pagamenti sicuri (solo 2% fee). Ottimizza il tuo lavoro e i tuoi guadagni, basta costi per contatto!",
+        "keywords":
+          "trovare clienti serramentista, lavoro serramentista, clienti infissi, come trovare lavori serramenti, piattaforma per serramentisti senza commissioni, gestione lavori serramenti, aumentare clienti serramentista, offerte lavoro serramentista, guadagnare di più serramentista, alternativa a piattaforme serramentisti costose, serramentista zero commissioni, serramentista pagamenti sicuri, basta costi per contatto serramentista"
+      },
+      {
+        "name": "Fabbri",
+        "description":
+          "Installazione, riparazione e manutenzione di cancelli, inferriate, porte blindate, serrature di sicurezza e strutture metalliche in genere.",
+        "professionalCopy":
+          "Sicurezza e artigianalità pagate il giusto! Trova clienti per cancelli, serrature e lavori in metallo senza intermediari. Contatto diretto, accordi chiari e pagamenti sicuri con commissioni irrisorie (2%). Il tuo mestiere vale, non regalarlo alle piattaforme!",
+        "keywords":
+          "trovare clienti fabbro, lavoro fabbro, clienti serrature, come trovare lavori da fabbro, piattaforma per fabbri senza commissioni, gestione lavori fabbro, aumentare clienti fabbro, offerte lavoro fabbro, guadagnare di più fabbro, alternativa a piattaforme fabbri costose, fabbro zero commissioni, fabbro pagamenti sicuri, fabbro senza intermediari"
+      },
+      {
+        "name": "Tende da sole",
+        "description":
+          "Progettazione, installazione e manutenzione di tende da sole e sistemi di schermatura solare",
+        "professionalCopy":
+          "Porta ombra e guadagni alla luce del sole! Ricevi richieste per installazione e manutenzione di tende da sole, gestisci i clienti direttamente e incassa senza commissioni elevate. Con Mestieri.pro (€14,90/mese), il tuo business cresce senza costi nascosti.",
+        "keywords":
+          "trovare clienti tende da sole, lavoro installatore tende da sole, clienti tende da sole, come trovare lavori tende da sole, piattaforma per tende da sole senza commissioni, gestione lavori tende da sole, aumentare clienti tende da sole, offerte lavoro tende da sole, guadagnare di più installatore tende da sole, alternativa a piattaforme tende da sole costose, tende da sole zero commissioni, tende da sole senza costi nascosti"
+      },
+      {
+        "name": "Riscaldamento e climatizzazione",
+        "description": "Installazione e manutenzione impianti",
+        "professionalCopy":
+          "Tecnici del clima, basta sprechi! Trova clienti per installazioni e manutenzioni, gestisci appuntamenti e pagamenti direttamente. L'abbonamento Mestieri.pro (€14,90/mese) ti fa tenere i guadagni (solo 2% commissione), a differenza delle piattaforme con costi elevati per ogni lavoro.",
+        "keywords":
+          "trovare clienti riscaldamento, lavoro climatizzazione, clienti impianti termici, come trovare lavori riscaldamento e condizionamento, piattaforma per installatori senza commissioni, gestione lavori impianti, aumentare clienti riscaldamento e climatizzazione, offerte lavoro termoidraulico, guadagnare di più impianti, alternativa a piattaforme impiantisti costose, riscaldamento climatizzazione zero commissioni, installatore pagamenti sicuri, stop costi elevati impiantista"
+      },
+      {
+        "name": "Servizi di telecomunicazione",
+        "description":
+          "Installazione e configurazione di sistemi di comunicazione",
+        "professionalCopy":
+          "Connetti i clienti, non le commissioni! Ricevi richieste per installazioni e configurazioni TLC, contatta direttamente chi ha bisogno e definisci il tuo prezzo. Con il nostro abbonamento (€14,90/mese), massimizzi i profitti su ogni intervento, dimenticando i costi per contatto.",
+        "keywords":
+          "trovare clienti telecomunicazioni, lavoro telecomunicazioni, clienti sistemi comunicazione, come trovare lavori telecomunicazioni, piattaforma per installatori TLC senza commissioni, gestione lavori telecomunicazioni, aumentare clienti telecomunicazioni, offerte lavoro telecomunicazioni, guadagnare di più telecomunicazioni, alternativa a piattaforme TLC costose, telecomunicazioni zero commissioni, telecomunicazioni stop costi per contatto, massimizza profitti TLC"
+      },
+      {
+        "name": "Traslochi e sgomberi",
+        "description": "Servizi di trasloco e smaltimento mobili",
+        "professionalCopy":
+          "Organizza traslochi, non regalare i tuoi margini! Ricevi richieste dirette, fornisci preventivi chiari e gestisci i pagamenti in modo sicuro (solo 2% commissione). Abbonamento conveniente (€14,90/mese) per trovare clienti senza costi per contatto esagerati come su altre piattaforme.",
+        "keywords":
+          "trovare clienti traslochi, lavoro traslocatore, clienti sgomberi, come trovare lavori trasloco, piattaforma per traslocatori senza commissioni, gestione traslochi e sgomberi, aumentare clienti traslochi, offerte lavoro traslocatore, guadagnare di più traslochi, alternativa a piattaforme traslochi costose, traslochi zero commissioni, traslocatore pagamenti sicuri, basta costi esagerati traslochi"
+      },
+      {
+        "name": "Appaltatori generici",
+        "description": "Lavori di ristrutturazione e manutenzione",
+        "professionalCopy":
+          "Gestisci ristrutturazioni, non commissioni! Trova progetti edili e di manutenzione, contatta i clienti direttamente e definisci i termini senza intermediari. Il nostro abbonamento (€14,90/mese) batte i costi per lead di altre piattaforme. Costruisci il tuo business, mattone dopo mattone!",
+        "keywords":
+          "trovare clienti appaltatore edile, lavoro ristrutturazioni, clienti lavori edili, come trovare lavori di ristrutturazione, piattaforma per appaltatori senza commissioni, gestione lavori edili, aumentare clienti impresa edile, offerte lavoro appaltatore, guadagnare di più ristrutturazioni, alternativa a ProntoPro appaltatore, appaltatore zero commissioni, appaltatore stop costi per lead, appaltatore senza intermediari"
+      },
+      {
+        "name": "Altri servizi per la casa",
+        "description": "Servizi vari per la casa",
+        "professionalCopy":
+          "Qualunque sia il tuo servizio per la casa, trova clienti senza pagare commissioni folli! Con Mestieri.pro: abbonamento fisso (€14,90/mese), contatti diretti, pagamenti sicuri (solo 2% fee). Smetti di pagare per semplici preventivi e inizia a guadagnare davvero!",
+        "keywords":
+          "trovare clienti servizi per la casa, lavoro servizi casa, clienti manutenzione casa, come trovare lavori servizi per la casa, piattaforma per professionisti casa senza commissioni, aumentare clienti servizi per la casa, offerte lavoro servizi casa, guadagnare di più servizi per la casa, alternativa a piattaforme servizi casa costose, servizi casa zero commissioni, servizi casa pagamenti sicuri, basta commissioni servizi casa"
+      }
+    ]
+  },
+  {
+    "name": "Istruzione",
+    "subs": [
+      {
+        "name": "Baby-sitter",
+        "description": "Assistenza a bambini e ragazzi",
+        "professionalCopy":
+          "Trova le famiglie giuste e fatti pagare il giusto! Contatta direttamente i genitori, gestisci la tua disponibilità e ricevi pagamenti sicuri. Con Mestieri.pro, la tua affidabilità viene premiata senza commissioni nascoste. Abbonati e tieni il 100%!",
+        "keywords":
+          "trovare famiglie baby sitter, lavoro baby sitter, clienti baby sitter a domicilio, come trovare lavoro assistenza bambini, piattaforma per baby sitter senza commissioni, gestione appuntamenti baby sitter, aumentare clienti baby sitter, offerte lavoro baby sitter, guadagnare di più baby sitter, cerca lavoro baby sitter, baby sitter zero commissioni, baby sitter pagamenti sicuri, baby sitter 100% guadagno"
+      },
+      {
+        "name": "Doposcuola",
+        "description": "Supporto allo studio per studenti",
+        "professionalCopy":
+          "Aiuta gli studenti a crescere e fai crescere il tuo guadagno! Trova famiglie per doposcuola, gestisci gli orari e incassa il 100% delle tue tariffe. Dimentica le piattaforme che trattengono una fetta della tua paga! Abbonamento conveniente, massimo profitto.",
+        "keywords":
+          "trovare studenti doposcuola, lavoro doposcuola, clienti aiuto compiti, come trovare lavoro supporto studio, piattaforma per doposcuola senza commissioni, gestione orari doposcuola, aumentare clienti aiuto compiti, offerte lavoro doposcuola, guadagnare di più doposcuola, cerca lavoro doposcuola, doposcuola zero commissioni, doposcuola 100% guadagno, doposcuola senza trattenute"
+      },
+      {
+        "name": "Lezioni private",
+        "description":
+          "Lezioni individuali per materie scolastiche o extracurricolari",
+        "professionalCopy":
+          "Insegnante? Tieni il 100% del valore delle tue lezioni! Trova studenti, chatta direttamente, gestisci il calendario e ricevi pagamenti sicuri con commissioni minime (2%). Basta intermediari costosi, valorizza la tua professionalità con Mestieri.pro!",
+        "keywords":
+          "trovare studenti lezioni private, lavoro insegnante privato, clienti ripetizioni, come trovare studenti per lezioni, piattaforma per lezioni private senza commissioni, gestione lezioni private online, aumentare clienti ripetizioni, offerte lavoro lezioni private, guadagnare di più lezioni private, cerca lavoro insegnante privato, lezioni private zero commissioni, lezioni private pagamenti sicuri, lezioni private 100% valore, basta intermediari lezioni private"
+      },
+      {
+        "name": "Workshop",
+        "description": "Corsi intensivi su argomenti specifici",
+        "professionalCopy":
+          "Condividi la tua passione e riempi i tuoi workshop! Promuovi i tuoi corsi, ricevi iscrizioni dirette e gestisci i pagamenti con commissioni irrisorie (2%). Con Mestieri.pro, trasformi la tua conoscenza in profitto senza intermediari costosi.",
+        "keywords":
+          "trovare partecipanti workshop, organizzare workshop, clienti corsi formazione, come trovare iscritti workshop, piattaforma per workshop senza commissioni, gestione iscrizioni workshop, aumentare partecipanti corsi, promuovere workshop online, guadagnare con corsi intensivi, cerca piattaforma per formatori, workshop zero commissioni, workshop pagamenti sicuri, workshop senza intermediari"
+      },
+      {
+        "name": "Altri servizi di istruzione",
+        "description": "Servizi educativi e formativi vari",
+        "professionalCopy":
+          "Offri corsi, tutoraggio o formazione specifica? Raggiungi il tuo pubblico senza intermediari! Abbonamento trasparente, contatti diretti, pagamenti sicuri e commissioni minime. Massimizza l'impatto e il profitto della tua offerta formativa!",
+        "keywords":
+          "trovare clienti servizi istruzione, lavoro formazione, clienti servizi educativi, come trovare clienti per servizi istruzione, piattaforma per formatori e educatori, aumentare clienti formazione, offerte lavoro istruzione, guadagnare di più con formazione, cerca piattaforma servizi educativi, servizi istruzione zero commissioni, servizi istruzione pagamenti sicuri, massimizza profitto formazione"
+      }
+    ]
+  },
+  {
+    "name": "Intrattenimento",
+    "subs": [
+      {
+        "name": "Event planner",
+        "description": "Organizzazione di eventi e cerimonie",
+        "professionalCopy":
+          "Organizza eventi memorabili, non pagare commissioni esorbitanti! Trova clienti per matrimoni, feste ed eventi aziendali, collabora direttamente e gestisci i pagamenti in modo trasparente (solo 2% fee). Il nostro abbonamento ti lascia il controllo e il guadagno.",
+        "keywords":
+          "trovare clienti event planner, lavoro organizzatore eventi, clienti matrimoni, come trovare ingaggi per eventi, piattaforma per event planner senza commissioni, gestione eventi e cerimonie, aumentare clienti organizzazione eventi, offerte lavoro event planner, guadagnare di più event planner, cerca ingaggi organizzatore eventi, event planner zero commissioni, event planner pagamenti trasparenti, controllo guadagno event planner"
+      },
+      {
+        "name": "Musicisti, bande e orchestre",
+        "description": "Servizi musicali per eventi e occasioni speciali",
+        "professionalCopy":
+          "Fai sentire la tua musica, non le commissioni! Trova ingaggi per eventi, contatta direttamente gli organizzatori e fatti pagare il giusto per il tuo talento. Mostra il tuo repertorio su Mestieri.pro e gestisci le date senza intermediari. Tieni il 98% del cachet!",
+        "keywords":
+          "trovare ingaggi musicisti, lavoro band musicale, clienti musica dal vivo eventi, come trovare serate per musicisti, piattaforma per musicisti senza commissioni, gestione date concerti, aumentare ingaggi band, offerte lavoro musicisti, guadagnare di più musica eventi, cerca ingaggi per band, musicisti zero commissioni, musicisti senza intermediari, tieni cachet musicisti, guadagno band musicale"
+      },
+      {
+        "name": "DJ",
+        "description": "Selezione musicale per feste e eventi",
+        "professionalCopy":
+          "Mixa musica, non i tuoi guadagni! Trova serate, feste private ed eventi, contatta direttamente i clienti e incassa quasi il 100% del tuo compenso (solo 2% commissione). Con l'abbonamento Mestieri.pro, la tua console è tua, e anche i profitti!",
+        "keywords":
+          "trovare serate DJ, lavoro disc jockey, clienti DJ per feste, come trovare ingaggi DJ eventi, piattaforma per DJ senza commissioni, gestione serate DJ, aumentare ingaggi DJ, offerte lavoro DJ, guadagnare di più come DJ, cerca ingaggi DJ, DJ zero commissioni, DJ guadagno pieno, DJ senza tagli"
+      },
+      {
+        "name": "Animatori",
+        "description":
+          "Animazione per feste di compleanno, eventi aziendali e altro",
+        "professionalCopy":
+          "Porta allegria e guadagna senza pensieri! Trova feste ed eventi, contatta direttamente chi cerca animazione e gestisci tutto dall'app. Pagamenti sicuri e commissioni bassissime (2%). Il divertimento paga, quasi al 100%!",
+        "keywords":
+          "trovare feste animatore, lavoro animatore eventi, clienti animazione per bambini, come trovare ingaggi animazione, piattaforma per animatori senza commissioni, gestione ingaggi animazione, aumentare feste animatore, offerte lavoro animatore, guadagnare di più animazione, cerca ingaggi animatore, animatore zero commissioni, animatore pagamenti sicuri, animazione 100% guadagno"
+      },
+      {
+        "name": "Ballerini",
+        "description": "Spettacoli di danza per eventi e occasioni speciali",
+        "professionalCopy":
+          "Esprimi la tua arte e fatti pagare per il tuo talento! Trova ingaggi per spettacoli ed eventi, contatta direttamente gli organizzatori e gestisci le tue performance. Con Mestieri.pro, il palco è tuo, e anche il compenso (98%), senza tagli!",
+        "keywords":
+          "trovare ingaggi ballerini, lavoro ballerino eventi, clienti spettacoli di danza, come trovare lavori per ballerini, piattaforma per ballerini senza commissioni, gestione performance danza, aumentare ingaggi ballerini, offerte lavoro ballerino, guadagnare di più danza, cerca ingaggi ballerino, ballerino zero commissioni, ballerino senza tagli, compenso ballerino"
+      },
+      {
+        "name": "Altri servizi di intrattenimento",
+        "description": "Maghi, comici, artisti di strada e altro",
+        "professionalCopy":
+          "Sei un mago, comico, artista di strada? Fatti trovare senza regalare i tuoi guadagni! Con Mestieri.pro: contatti diretti con chi organizza eventi, pagamenti sicuri (solo 2% fee) e un abbonamento che costa meno di una singola commissione altrove. Il tuo show merita il giusto compenso!",
+        "keywords":
+          "trovare ingaggi artisti, lavoro intrattenimento eventi, clienti spettacoli, come trovare ingaggi per artisti, piattaforma per artisti senza commissioni, gestione spettacoli, aumentare ingaggi intrattenimento, offerte lavoro artista, guadagnare di più con spettacoli, cerca ingaggi artista, artista zero commissioni, artista pagamenti sicuri, compenso artista"
+      }
+    ]
+  }
+]
