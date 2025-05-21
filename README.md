@@ -1,14 +1,16 @@
 # Blog Generator
 
-A local tool that generates blog articles in Italian using AI. Built with React, FastAPI, and LangChain.
+A local tool that generates blog articles in Italian using AI. Built with React, FastAPI, LangChain, and supports multiple LLM providers (Ollama, Cerebras, Groq).
 
 ## Features
 
 - Generate blog articles in Italian from topics
+- Retrieval-Augmented Generation (RAG) with Neo4j vector store for context enrichment
+- Tag-based article retrieval and enrichment
 - Preview generated content before saving
-- Save articles in Markdown format
-- Organize articles in topic-based folders
-- Uses Ollama with the Deepseek model for content generation
+- Save articles in Markdown format, organized in topic-based folders
+- Supports multiple LLM providers: Ollama (Deepseek), Cerebras, Groq (configurable via `.env`)
+- Efficient, context-aware article generation pipeline
 
 ## Prerequisites
 
@@ -16,7 +18,9 @@ Before you begin, ensure you have installed:
 
 - Python 3.8 or higher
 - Node.js 18 or higher
-- [Ollama](https://ollama.ai/) with the Deepseek model
+- [Ollama](https://ollama.ai/) with the Deepseek model (if using Ollama)
+- (Optional) Cerebras or Groq API keys for cloud LLMs
+- Docker (for Neo4j vector database)
 
 ### Installing Ollama and Deepseek
 
@@ -24,6 +28,13 @@ Before you begin, ensure you have installed:
 2. Pull the Deepseek model:
    ```bash
    ollama pull deepseek
+   ```
+
+### Setting up Neo4j (Vector Store)
+
+1. Start Neo4j in Docker:
+   ```bash
+   docker run --name neo4j-blog-rag -d -p7474:7474 -p7687:7687 -v $PWD/neo4j_data:/data -e NEO4J_AUTH=neo4j/testpassword neo4j:latest
    ```
 
 ## Installation
@@ -36,7 +47,7 @@ Before you begin, ensure you have installed:
 
 2. Install frontend dependencies:
    ```bash
-   npm install
+   pnpm install
    ```
 
 3. Create a Python virtual environment and activate it:
@@ -50,24 +61,42 @@ Before you begin, ensure you have installed:
    pip install -r requirements.txt
    ```
 
+5. Configure your `.env` file:
+   ```env
+   # Example .env
+   TAVILY_API_KEY=your-tavily-key
+   CEREBRAS_API_KEY=your-cerebras-key
+   GROQ_API_KEY=your-groq-key
+   LLM_PROVIDER=ollama
+   ```
+   - Set `LLM_PROVIDER` to `ollama`, `cerebras`, or `groq` as needed.
+   - Do not add comments on the same line as variable assignments.
+
 ## Running the Application
 
-1. Start the Ollama server (if not already running):
+0. to run automatically use Run All task (ctrl+alt+p -> Task: Run Task -> Run All)
+
+1. Start the Neo4j database (if not already running):
+   ```bash
+   docker start neo4j-blog-rag
+   ```
+
+2. Start the Ollama server (if using Ollama):
    ```bash
    ollama serve
    ```
 
-2. Start the backend server (in a new terminal):
+3. Start the backend server (in a new terminal):
    ```bash
    python -m uvicorn backend.main:app --reload
    ```
 
-3. Start the frontend development server (in another terminal):
+4. Start the frontend development server (in another terminal):
    ```bash
    npm run dev
    ```
 
-4. Open your browser and navigate to:
+5. Open your browser and navigate to:
    ```
    http://localhost:5173
    ```
@@ -78,15 +107,17 @@ Before you begin, ensure you have installed:
 blog-generator/
 ├── backend/
 │   ├── llm/
-│   │   └── __init__.py    # LLM configuration and prompts
-│   └── main.py            # FastAPI backend server
+│   │   └── __init__.py    # LLM configuration, provider selection, and prompts
+│   │   └── neo4j_rag.py   # Neo4j vector store integration and RAG logic
+│   └── main.py            # FastAPI backend server and workflow
 ├── src/
 │   ├── types/
 │   │   └── Article.ts     # TypeScript interfaces
 │   ├── App.tsx           # Main React component
 │   └── main.tsx          # React entry point
 ├── package.json          # Frontend dependencies
-└── requirements.txt      # Python dependencies
+├── requirements.txt      # Python dependencies
+└── README.md
 ```
 
 ## Usage
@@ -105,9 +136,9 @@ topic-name/
 
 ## Development
 
-- Frontend runs on Vite with React and TypeScript
-- Backend uses FastAPI with LangChain for LLM integration
-- Tailwind CSS for styling
+- Frontend: Vite, React, TypeScript, Tailwind CSS
+- Backend: FastAPI, LangChain, Neo4j (vector store), multi-provider LLM support
+- RAG workflow: Neo4j for enrichment, tag-based retrieval, context-aware LLM calls
 - React Hook Form for form handling
 - React Markdown for preview rendering
 
@@ -122,6 +153,7 @@ topic-name/
 ## License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
+
 ## Esempio articolo
 
 ---
