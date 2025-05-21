@@ -9,3 +9,5 @@ langchain_ollama
 langchain_tavily
 python-dotenv
 tqdm
+neo4j
+langchain-community

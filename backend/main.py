@@ -12,6 +12,8 @@ from langchain_tavily import TavilySearch
 from dotenv import load_dotenv
 from langgraph.graph import StateGraph, END, START
 from backend.llm import generate_article as llm_generate_article
+from backend.llm.neo4j_rag import upsert_article_in_neo4j, retrieve_similar_articles
+from neo4j import GraphDatabase
 load_dotenv()
 
 tavily_api_key = os.getenv("TAVILY_API_KEY")  # Access the variable
@@ -106,6 +108,7 @@ class OverallState(BaseModel):
     sources: list = []
     summary: str = ""
     article: Optional[dict] = None  # Use None as default
+    enrichment: Optional[str] = ""  # Add enrichment to state
 
 # Node: Generate web search query using LLM
 async def generate_search_query(state: OverallState):
@@ -170,11 +173,24 @@ async def summarize_sources(state: OverallState):
     summary = match.group(1).strip() if match else ""
     return {"summary": summary}
 
+# Node: Enrich with similar articles (RAG)
+async def enrich_with_similar_articles_node(state: OverallState):
+    # Retrieve top 3 similar articles (hybrid search, filtered by all tags dynamically)
+    similar = retrieve_similar_articles(state.topic, top_k=3, use_all_tags=True)
+    enrichment = "\n\n".join([
+        f"[Riferimento] {item.metadata.get('title', '')}: {item.metadata.get('excerpt', '')}" for item in similar
+    ])
+    return {"enrichment": enrichment}
+
 # Node: Generate article daft (LLM)
 async def generate_article_node(state: OverallState):
     print("**************************\n[LLM] Generating article with summary context:", state.summary)
     audience = "consumatori interessati a trovare o capire meglio i servizi offerti dai professionisti." if state.customer_audience else "professionisti del settore che vogliono tenersi aggiornati"
     extra_context = state.additional_context or ""
+    # Add enrichment if present
+    enrichment = getattr(state, "enrichment", "")
+    if enrichment:
+        extra_context += f"\nContesto da articoli simili:\n{enrichment}"
     if state.information_type:
         extra_context += f"\nTipo di informazione: {state.information_type}"
     extra_context += f"\nPubblico: {audience}"
@@ -235,18 +251,30 @@ async def finalize_article(state: OverallState):
         content=improved_content
     )
 
+# --- RAG: Store and retrieve similar articles ---
+async def enrich_with_similar_articles(article: Article):
+    upsert_article_in_neo4j(article.model_dump())
+    # Retrieve top 3 similar articles (hybrid search, filtered by all tags dynamically)
+    similar = retrieve_similar_articles(article.content, top_k=3, use_all_tags=True)
+    enrichment = "\n\n".join([
+        f"[Riferimento] {item.metadata.get('title', '')}: {item.metadata.get('excerpt', '')}" for item in similar
+    ])
+    return enrichment
+
 # Build the workflow graph
 def get_workflow():
     builder = StateGraph(OverallState)
     builder.add_node("generate_search_query", generate_search_query)
     builder.add_node("perform_web_search", perform_web_search)
     builder.add_node("summarize_sources", summarize_sources)
+    builder.add_node("enrich_with_similar_articles", enrich_with_similar_articles_node)
     builder.add_node("generate_article", generate_article_node)
     builder.add_node("finalize_article", finalize_article)
     builder.add_edge(START, "generate_search_query")
     builder.add_edge("generate_search_query", "perform_web_search")
     builder.add_edge("perform_web_search", "summarize_sources")
-    builder.add_edge("summarize_sources", "generate_article")
+    builder.add_edge("summarize_sources", "enrich_with_similar_articles")
+    builder.add_edge("enrich_with_similar_articles", "generate_article")
     builder.add_edge("generate_article", "finalize_article")
     builder.add_edge("finalize_article", END)
     return builder.compile()
@@ -278,6 +306,22 @@ async def generate_article_endpoint(article_input: ArticleInput):
         # Only auto-save if autosave flag is set
         if article and getattr(article_input, "autosave", False):
             await save_article(Article(**article))
+        # --- RAG enrichment ---
+        if article:
+            enrichment = await enrich_with_similar_articles(Article(**article))
+            article["additional_context"] = enrichment
         return article if article else HTTPException(status_code=500, detail="Article not generated")
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+# --- API endpoint for manual retrieval ---
+from fastapi import Query
+
+@app.get("/api/retrieve")
+async def retrieve_articles(query: str = Query(..., description="Query for hybrid search")):
+    try:
+        results = retrieve_similar_articles(query, top_k=3)
+        return [{"title": r.metadata.get("title"), "excerpt": r.metadata.get("excerpt"), "slug": r.metadata.get("slug"), "score": getattr(r, "score", None)} for r in results]
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+

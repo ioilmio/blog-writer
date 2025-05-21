@@ -19,6 +19,14 @@ INFORMATION_TYPE_VALUES = [
     "consigli per clienti"
 ]
 
+INFORMATION_TYPE_AUDIENCE_MAP = {
+    "guide pratiche": [True, False],
+    "ultime tendenze": [True, False],
+    "normative": [False],  # Only for professionals
+    "consigli per professionisti": [False],  # Only for professionals
+    "consigli per clienti": [True],  # Only for customers
+}
+
 # Load categories
 with open(CATEGORIES_FILE, encoding="utf-8") as f:
     categories = json.load(f)
@@ -59,7 +67,22 @@ def generate_and_save_article(topic, additional_context, customer_audience, info
         print(f"Error: {response.status_code} - {response.text}")
         return None
 
+def wait_for_backend(url="http://localhost:8000/api/generate", timeout=60, interval=2):
+    start = time.time()
+    while time.time() - start < timeout:
+        try:
+            r = requests.options(url)
+            if r.status_code < 500:
+                print("[CHECK] FastAPI backend is up.")
+                return True
+        except Exception:
+            pass
+        print("[CHECK] Waiting for FastAPI backend to be available...")
+        time.sleep(interval)
+    raise RuntimeError(f"FastAPI backend not available at {url} after {timeout} seconds.")
+
 time.sleep(3)  # Wait for backend services to start if running as a VS Code task
+wait_for_backend()
 
 start_time = time.time()
 cat_bar = tqdm(categories, desc="Categories", dynamic_ncols=True)
@@ -74,10 +97,13 @@ for category in cat_bar:
             additional_context = f"{subs.get('description', '')}\nKeywords: {subs.get('keywords', '')}"
             topic_dir = f"blog-post/{slugify(topic)}"
             professional_copy = subs.get("professionalCopy", "")
-            total_articles = len(CUSTOMER_AUDIENCE_VALUES) * len(INFORMATION_TYPE_VALUES)
+            # Calculate total_articles based on valid combinations only
+            valid_combinations = [(aud, info) for info in INFORMATION_TYPE_VALUES for aud in INFORMATION_TYPE_AUDIENCE_MAP[info]]
+            total_articles = len(valid_combinations)
             with tqdm(total=total_articles, desc=f"Articles for {topic}", leave=False, dynamic_ncols=True) as article_bar:
-                for customer_audience in CUSTOMER_AUDIENCE_VALUES:
-                    for information_type in INFORMATION_TYPE_VALUES:
+                for information_type in INFORMATION_TYPE_VALUES:
+                    allowed_audiences = INFORMATION_TYPE_AUDIENCE_MAP[information_type]
+                    for customer_audience in allowed_audiences:
                         status_msg = f"{topic} | {customer_audience} | {information_type}"
                         if is_done(topic, customer_audience, information_type):
                             tqdm.write(f"[SKIP] {status_msg}")
