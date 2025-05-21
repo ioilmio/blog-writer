@@ -10,8 +10,8 @@ import os
 from langchain_ollama import ChatOllama
 from langchain_tavily import TavilySearch
 from dotenv import load_dotenv
-# from backend.llm import generate_article as llm_generate_article
 from langgraph.graph import StateGraph, END, START
+from backend.llm import generate_article as llm_generate_article
 load_dotenv()
 
 tavily_api_key = os.getenv("TAVILY_API_KEY")  # Access the variable
@@ -48,8 +48,9 @@ class ArticleInput(BaseModel):
     additional_context: Optional[str] = None
     customer_audience: Optional[bool] = None
     information_type: Optional[str] = None
-    output_dir: Optional[str] = None  # NEW
-    autosave: Optional[bool] = False  # NEW
+    output_dir: Optional[str] = None  # workflow-level only
+    autosave: Optional[bool] = False  # workflow-level only
+    professional_copy: Optional[str] = None  # NEW
 
 class Article(BaseModel):
     title: str
@@ -59,16 +60,12 @@ class Article(BaseModel):
     topic: str
     tags: List[str]
     content: str
-    output_dir: Optional[str] = None  # NEW
 
 @app.post("/api/save")
 async def save_article(article: Article):
     try:
-        # Always use output_dir if provided, else fallback to blog-post/[slugified topic]
-        if article.output_dir:
-            save_dir = article.output_dir
-        else:
-            save_dir = os.path.join("blog-post", slugify(article.topic))
+        # Always fallback to blog-post/[slugified topic] for manual save
+        save_dir = os.path.join("blog-post", slugify(article.topic))
         os.makedirs(save_dir, exist_ok=True)
         file_path = os.path.join(save_dir, f"{article.slug}.md")
         
@@ -95,7 +92,6 @@ tags: {article.tags}
         print(f"[ERROR] Failed to save article: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
-from backend.llm import generate_article as llm_generate_article
 # import asyncio
 
 class OverallState(BaseModel):
@@ -103,7 +99,8 @@ class OverallState(BaseModel):
     additional_context: str = ""
     customer_audience: Optional[bool] = None
     information_type: Optional[str] = None
-    output_dir: Optional[str] = None  # NEW
+    output_dir: Optional[str] = None  # workflow-level only
+    professional_copy: Optional[str] = None  # NEW
     search_query: str = ""
     web_search_results: list = []
     sources: list = []
@@ -165,7 +162,7 @@ async def summarize_sources(state: OverallState):
     Rispondi solo con il riassunto racchiuso tra <summary> e </summary>.
     """
     print("**************************\n[LLM] Prompt for summarization:\n", prompt)
-    llm = ChatOllama(model="deepseek-r1:14b", temperature=0.5)
+    llm = ChatOllama(model="deepseek-r1:14b", temperature=0.7)
     response = await llm.ainvoke([{"role": "user", "content": prompt}])
     print("**************************\n[LLM] Response for summarization:\n", response.content)
     import re
@@ -181,6 +178,8 @@ async def generate_article_node(state: OverallState):
     if state.information_type:
         extra_context += f"\nTipo di informazione: {state.information_type}"
     extra_context += f"\nPubblico: {audience}"
+    if state.professional_copy:
+        extra_context += f"\nContesto professionale: {state.professional_copy}"
     article = await llm_generate_article(
         topic=state.topic,
         additional_context=extra_context + "\n" + state.summary
@@ -190,12 +189,42 @@ async def generate_article_node(state: OverallState):
     return {"article": article.model_dump()}
 
 # Node: Finalize article
-def finalize_article(state: OverallState):
+async def finalize_article(state: OverallState):
     print("**************************\n[DEBUG] finalize_article state.article:", state.article)
     now = datetime.now().strftime("%Y-%m-%d")
     slug = slugify(state.article['title'], lowercase=True)
-    # Always propagate output_dir for saving
-    output_dir = state.output_dir or os.path.join("blog-post", slugify(state.topic))
+    # Proofreading step using LLM
+    original_content = state.article['content']
+    audience = "clienti in cerca di servizi" if state.customer_audience else "professionisti del settore"
+
+    proofreading_prompt = f"""
+        Il tuo compito è correggere e migliorare il contenuto fornito, assicurandoti che sia impeccabile dal punto di vista grammaticale, ortografico e della chiarezza.
+
+        **Istruzioni per la correzione:**
+
+        1.  **Grammatica, Sintassi e Ortografia:** Correggi qualsiasi errore grammaticale, di sintassi o ortografico.
+        2.  **Chiarezza e Scorrevolezza:** Rendi il testo più chiaro, conciso e scorrevole, eliminando frasi ridondanti o ambigue.
+        3.  **Linguaggio:**
+            * Evita l'uso di anglicismi inutili o espressioni colloquiali eccessive, preferendo un italiano standard e professionale.
+            * Mantieni il tono coerente con quello di un articolo {state.information_type} destinato a {audience} del blog di Mestieri.pro.
+        4.  **Contenuto Sensibile (Competitors):**
+            * **NON menzionare in alcun modo piattaforme competitor** come ChronoShare o ProntoPro.
+            * Se il contenuto originale dovesse per qualche motivo fare riferimento a tali piattaforme, modifica il testo per rimuovere qualsiasi menzione.
+            * In caso sia assolutamente necessario un confronto (sebbene da evitare), riformula il testo in modo da evidenziare sempre e solo i vantaggi e i punti di forza di Mestieri.pro, senza nominare direttamente i competitor.
+
+        **Rispondi solo con il contenuto corretto e migliorato, senza aggiungere commenti o preamboli.**
+
+        Contenuto originale da correggere:
+        {original_content}
+        """
+    try:
+        llm = ChatOllama(model="deepseek-r1:14b", temperature=0.5)
+        improved_content = await llm.ainvoke([{"role": "user", "content": proofreading_prompt}])    
+        if hasattr(improved_content, 'content'):
+            improved_content = improved_content.content
+    except Exception as e:
+        print(f"[PROOFREAD ERROR] {e}, using original content.")
+        improved_content = original_content
     return Article(
         title=state.article['title'],
         date=now,
@@ -203,8 +232,7 @@ def finalize_article(state: OverallState):
         slug=slug,
         topic=state.topic,
         tags=state.article['tags'],
-        content=state.article['content'],
-        output_dir=output_dir
+        content=improved_content
     )
 
 # Build the workflow graph
@@ -233,7 +261,8 @@ async def generate_article_endpoint(article_input: ArticleInput):
             additional_context=article_input.additional_context,
             customer_audience=article_input.customer_audience,
             information_type=article_input.information_type,
-            output_dir=article_input.output_dir,  # NEW
+            output_dir=None,  # Do not use output_dir, always use topic-based dir
+            professional_copy=article_input.professional_copy,  # NEW
         )
         result = await workflow.ainvoke(state)
         article = None
@@ -246,7 +275,6 @@ async def generate_article_endpoint(article_input: ArticleInput):
             article["date"] = result.get("date") or datetime.now().strftime("%Y-%m-%d")
             article["slug"] = result.get("slug") or slugify(article["title"], lowercase=True)
             article["topic"] = result.get("topic") or state.topic
-            article["output_dir"] = state.output_dir  # NEW
         # Only auto-save if autosave flag is set
         if article and getattr(article_input, "autosave", False):
             await save_article(Article(**article))

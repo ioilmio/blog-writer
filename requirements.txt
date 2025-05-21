@@ -8,3 +8,4 @@ python-multipart
 langchain_ollama
 langchain_tavily
 python-dotenv
+tqdm

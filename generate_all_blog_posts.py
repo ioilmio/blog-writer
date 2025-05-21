@@ -1,7 +1,9 @@
+import requests
 import json
 import os
-import requests
 from slugify import slugify
+from tqdm import tqdm
+import time
 
 # Config
 BACKEND_URL = "http://localhost:8000/api/generate"
@@ -40,34 +42,69 @@ def mark_done(topic, customer_audience, information_type):
     with open(PROGRESS_FILE, "w", encoding="utf-8") as f:
         json.dump(progress, f, ensure_ascii=False, indent=2)
 
-# Iterate and generate
-for category in categories:
-    for subs in category.get("subs", []):
-        topic = subs["name"]
-        additional_context = f"{subs.get('description', '')}\nKeywords: {subs.get('keywords', '')}"
-        topic_dir = f"blog-post/{slugify(topic)}"
-        for customer_audience in CUSTOMER_AUDIENCE_VALUES:
-            for information_type in INFORMATION_TYPE_VALUES:
-                if is_done(topic, customer_audience, information_type):
-                    print(f"[SKIP] {topic} | {customer_audience} | {information_type}")
-                    continue
-                print(f"[GENERATE] {topic} | {customer_audience} | {information_type}")
-                payload = {
-                    "topic": topic,
-                    "additional_context": additional_context,
-                    "customer_audience": customer_audience,
-                    "information_type": information_type,
-                    "output_dir": topic_dir,
-                    "autosave": True
-                }
-                try:
-                    print(f"[POST] Sending payload: {json.dumps(payload, ensure_ascii=False)}")
-                    resp = requests.post(BACKEND_URL, json=payload, timeout=600)
-                    resp.raise_for_status()
-                    print(f"[RESPONSE] {resp.status_code}: {resp.text}")
-                    print(f"[SUCCESS] {topic} | {customer_audience} | {information_type}")
-                    mark_done(topic, customer_audience, information_type)
-                except Exception as e:
-                    print(f"[ERROR] {topic} | {customer_audience} | {information_type} -> {e}")
-                    # Do not mark as done, so it can be retried
-                    break
+def generate_and_save_article(topic, additional_context, customer_audience, information_type, output_dir, professional_copy):
+    payload = {
+        "topic": topic,
+        "additional_context": additional_context,
+        "customer_audience": customer_audience,
+        "information_type": information_type,
+        "output_dir": output_dir,
+        "autosave": True,
+        "professional_copy": professional_copy
+    }
+    response = requests.post("http://localhost:8000/api/generate", json=payload)
+    if response.status_code == 200:
+        return response.json()
+    else:
+        print(f"Error: {response.status_code} - {response.text}")
+        return None
+
+time.sleep(3)  # Wait for backend services to start if running as a VS Code task
+
+start_time = time.time()
+cat_bar = tqdm(categories, desc="Categories", dynamic_ncols=True)
+for category in cat_bar:
+    # Update elapsed time only once per category
+    elapsed = time.time() - start_time
+    cat_bar.set_postfix({'Elapsed': f'{elapsed/60:.1f} min'})
+    subs_list = category.get("subs", [])
+    with tqdm(subs_list, desc=f"Subcategories in {category.get('name', '')}", leave=False, dynamic_ncols=True) as subs_bar:
+        for subs in subs_bar:
+            topic = subs["name"]
+            additional_context = f"{subs.get('description', '')}\nKeywords: {subs.get('keywords', '')}"
+            topic_dir = f"blog-post/{slugify(topic)}"
+            professional_copy = subs.get("professionalCopy", "")
+            total_articles = len(CUSTOMER_AUDIENCE_VALUES) * len(INFORMATION_TYPE_VALUES)
+            with tqdm(total=total_articles, desc=f"Articles for {topic}", leave=False, dynamic_ncols=True) as article_bar:
+                for customer_audience in CUSTOMER_AUDIENCE_VALUES:
+                    for information_type in INFORMATION_TYPE_VALUES:
+                        status_msg = f"{topic} | {customer_audience} | {information_type}"
+                        if is_done(topic, customer_audience, information_type):
+                            tqdm.write(f"[SKIP] {status_msg}")
+                            article_bar.update(1)
+                            continue
+                        tqdm.write(f"[GENERATE] {status_msg}")
+                        try:
+                            article = generate_and_save_article(
+                                topic,
+                                additional_context,
+                                customer_audience,
+                                information_type,
+                                topic_dir,
+                                professional_copy
+                            )
+                            if article:
+                                tqdm.write(f"[SUCCESS] {status_msg}")
+                                mark_done(topic, customer_audience, information_type)
+                            else:
+                                tqdm.write(f"[FAIL] {status_msg} (No article returned)")
+                        except Exception as e:
+                            tqdm.write(f"[ERROR] {status_msg} -> {e}")
+                            import traceback
+                            tqdm.write(traceback.format_exc())
+                            # Do not mark as done, so it can be retried
+                            break
+                        article_bar.update(1)
+
+elapsed = time.time() - start_time
+print(f"\nAll done! Total elapsed time: {elapsed:.2f} seconds ({elapsed/60:.2f} minutes)")
