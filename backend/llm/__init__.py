@@ -4,6 +4,9 @@ from langchain.output_parsers import PydanticOutputParser
 from pydantic import BaseModel, Field
 from typing import List
 import json
+from langchain_cerebras import ChatCerebras
+from langchain_groq import ChatGroq
+import os
 
 class BlogArticle(BaseModel):
     title: str = Field(description="The title of the blog article")
@@ -11,12 +14,28 @@ class BlogArticle(BaseModel):
     tags: List[str] = Field(description="List of relevant tags for the article")
     content: str = Field(description="The main content of the article in markdown format")
 
-# Initialize Ollama with Deepseek model (use the correct model name)
+# Select LLM provider based on environment variable
+LLM_PROVIDER = os.getenv("LLM_PROVIDER", "").strip().lower().replace('"', '').replace("'", "")  # 'ollama' or 'cerebras' or 'groq'
 
-llm = ChatOllama(
-    model="deepseek-r1:14b",
-    temperature = 0.5,
-)
+# Read Cerebras API key from environment
+CEREBRAS_API_KEY = os.getenv("CEREBRAS_API_KEY")
+GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+# Factory for LLM
+
+def get_llm():
+    if LLM_PROVIDER == "cerebras":
+        if not CEREBRAS_API_KEY:
+            raise ValueError("CEREBRAS_API_KEY is not set in environment.")
+        return ChatCerebras(api_key=CEREBRAS_API_KEY, model="llama-4-scout-17b-16e-instruct", temperature=0.5)
+    elif LLM_PROVIDER == "groq":
+        if not GROQ_API_KEY:
+            raise ValueError("GROQ_API_KEY is not set in environment.")
+        return ChatGroq(api_key=GROQ_API_KEY, model="meta-llama/llama-4-scout-17b-16e-instruct", temperature=0.5)
+    else:
+        return ChatOllama(model="deepseek-r1:14b", temperature=0.5)
+
+# Use the LLM factory for all LLM calls
+llm = get_llm()
 # Template for generating blog articles
 BLOG_TEMPLATE = """
 Scrivi un articolo di blog in italiano, altamente informativo e accattivante,per il mercato e il pubblico italiano sull'argomento: \"{topic}\".

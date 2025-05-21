@@ -11,18 +11,18 @@ from langchain_ollama import ChatOllama
 from langchain_tavily import TavilySearch
 from dotenv import load_dotenv
 from langgraph.graph import StateGraph, END, START
-from backend.llm import generate_article as llm_generate_article
+from backend.llm import generate_article as llm_generate_article, get_llm
 from backend.llm.neo4j_rag import upsert_article_in_neo4j, retrieve_similar_articles
 from neo4j import GraphDatabase
 load_dotenv()
 
 tavily_api_key = os.getenv("TAVILY_API_KEY")  # Access the variable
 
-def get_llm_reasoner_model():
-    return ChatOllama(
-        model="deepseek-r1:14b",
-        temperature=1
-    )
+# def get_llm_reasoner_model():
+#     return ChatOllama(
+#         model="deepseek-r1:14b",
+#         temperature=1
+#     )
 
 def extract_result_from_tags(tag: str, result: str):
     if "</think>" in result:
@@ -122,7 +122,7 @@ async def generate_search_query(state: OverallState):
     Esempio: <query>strategie marketing parrucchieri 2025</query>
     """
     print("**************************\n[LLM] Prompt for search query:\n", prompt)
-    llm = ChatOllama(model="deepseek-r1:14b", temperature=0.5)
+    llm = get_llm()
     try:
         response = await llm.ainvoke([{"role": "user", "content": prompt}])
         print("**************************\n[LLM] Response for search query:\n", response.content)
@@ -165,7 +165,7 @@ async def summarize_sources(state: OverallState):
     Rispondi solo con il riassunto racchiuso tra <summary> e </summary>.
     """
     print("**************************\n[LLM] Prompt for summarization:\n", prompt)
-    llm = ChatOllama(model="deepseek-r1:14b", temperature=0.7)
+    llm = get_llm()
     response = await llm.ainvoke([{"role": "user", "content": prompt}])
     print("**************************\n[LLM] Response for summarization:\n", response.content)
     import re
@@ -234,7 +234,7 @@ async def finalize_article(state: OverallState):
         {original_content}
         """
     try:
-        llm = ChatOllama(model="deepseek-r1:14b", temperature=0.5)
+        llm = get_llm()
         improved_content = await llm.ainvoke([{"role": "user", "content": proofreading_prompt}])    
         if hasattr(improved_content, 'content'):
             improved_content = improved_content.content
