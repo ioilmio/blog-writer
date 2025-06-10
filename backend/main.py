@@ -227,6 +227,9 @@ async def finalize_article(state: OverallState):
             * **NON menzionare in alcun modo piattaforme competitor** come ChronoShare o ProntoPro.
             * Se il contenuto originale dovesse per qualche motivo fare riferimento a tali piattaforme, modifica il testo per rimuovere qualsiasi menzione.
             * In caso sia assolutamente necessario un confronto (sebbene da evitare), riformula il testo in modo da evidenziare sempre e solo i vantaggi e i punti di forza di Mestieri.pro, senza nominare direttamente i competitor.
+        5. **Call To Action:** Se il testo originale non include una call to action, aggiungine una alla fine per invitare i lettori a visitare Mestieri.pro, i professionisti a iscriversi, sulla pagina https://mestieri.pro/info o i potenziali clienti a contattare i professionisti del settore.
+        6. **Chiedi semnpre di condividere o lasciare un feedback sull'articolo, per migliorare la qualità dei contenuti.
+        7. **Modifiche Minime:** Preferisci modifiche minime e leggere, solo dove necessario per chiarezza, aggiornamento o miglioramento dello stile. Non cambiare la struttura o il significato del testo se non strettamente necessario.
 
         **Rispondi solo con il contenuto corretto e migliorato, senza aggiungere commenti o preamboli.**
 
