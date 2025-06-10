@@ -1,0 +1,183 @@
+import os
+import re
+import requests
+from pathlib import Path
+import yaml
+from urllib.parse import quote
+
+# --- CONFIG ---
+ARTICLE_ROOT = Path("blog-post")
+OUTPUT_ARTICLE_ROOT = Path(os.path.expanduser("~/quadro/mestieri/dev-posts"))
+OUTPUT_IMAGE_ROOT = Path(os.path.expanduser("~/quadro/mestieri/public"))
+UNSPLASH_KEY = "2PO5W5bjDSuq1ISHYsP9WNuLWctqHxZb33bOdi6ZOzQ"
+PEXELS_KEY = "563492ad6f917000010000011093a5f01ff04840900a4ff5ca8ad7cd"
+HEADERS_PEXELS = {"Authorization": PEXELS_KEY}
+
+# --- HELPERS ---
+def extract_frontmatter_and_content(text):
+    lines = text.splitlines()
+    i = 0
+    while i < len(lines) and (lines[i].strip() == '' or lines[i].strip().startswith('<!--')):
+        i += 1
+    if i < len(lines) and lines[i].strip() == '---':
+        start = i
+        end = start + 1
+        while end < len(lines) and lines[end].strip() != '---':
+            end += 1
+        if end < len(lines):
+            frontmatter = '\n'.join(lines[start+1:end])
+            content = '\n'.join(lines[end+1:])
+            return frontmatter, content
+    return None, text
+
+def parse_yaml_frontmatter(fm_text):
+    try:
+        return yaml.safe_load(fm_text)
+    except Exception:
+        return {}
+
+def extract_sections_from_markdown(md_text):
+    sections = []
+    current_title = None
+    current_text = []
+    for line in md_text.splitlines():
+        h2 = re.match(r"^##+\s+(.*)", line)
+        if h2:
+            if current_title:
+                sections.append((current_title, "\n".join(current_text).strip()))
+            current_title = h2.group(1).strip()
+            current_text = []
+        elif current_title:
+            current_text.append(line)
+    if current_title:
+        sections.append((current_title, "\n".join(current_text).strip()))
+    return sections
+
+def fetch_unsplash_image(query):
+    print(f"[UNSPLASH] Query: {query}")
+    url = f"https://api.unsplash.com/search/photos?query={quote(query)}&orientation=squarish&per_page=5"
+    resp = requests.get(url, headers={"Authorization": f"Client-ID {UNSPLASH_KEY}"})
+    print(f"[UNSPLASH] Status: {resp.status_code}")
+    if resp.status_code == 200:
+        data = resp.json()
+        print(f"[UNSPLASH] Results: {len(data.get('results', []))}")
+        for img in data.get("results", []):
+            if img.get("urls", {}).get("small"):
+                print(f"[UNSPLASH] Found image: {img['urls']['small']}")
+                return img["urls"]["small"], img["alt_description"] or query
+    else:
+        print(f"[UNSPLASH] Error: {resp.text}")
+    return None, None
+
+def fetch_pexels_image(query):
+    print(f"[PEXELS] Query: {query}")
+    url = f"https://api.pexels.com/v1/search?query={quote(query)}&orientation=square&per_page=5"
+    resp = requests.get(url, headers=HEADERS_PEXELS)
+    print(f"[PEXELS] Status: {resp.status_code}")
+    if resp.status_code == 200:
+        data = resp.json()
+        print(f"[PEXELS] Results: {len(data.get('photos', []))}")
+        for img in data.get("photos", []):
+            if img.get("src", {}).get("medium"):
+                print(f"[PEXELS] Found image: {img['src']['medium']}")
+                return img["src"]["medium"], img.get("alt", query)
+    else:
+        print(f"[PEXELS] Error: {resp.text}")
+    return None, None
+
+def download_image(url, out_path):
+    out_path.parent.mkdir(parents=True, exist_ok=True)  # Ensure directory exists
+    print(f"[DOWNLOAD] Downloading: {url} -> {out_path}")
+    resp = requests.get(url)
+    if resp.status_code == 200:
+        with open(out_path, "wb") as f:
+            f.write(resp.content)
+        print(f"[DOWNLOAD] Success: {out_path}")
+        return True
+    print(f"[DOWNLOAD] Failed: {url} (status {resp.status_code})")
+    return False
+
+def slugify(text):
+    text = text.lower()
+    text = re.sub(r"[^a-z0-9\-\s]", "", text)
+    text = re.sub(r"[\s_]+", "-", text)
+    return text.strip("-")
+
+def insert_images_in_markdown(md_text, section_to_img):
+    lines = md_text.splitlines()
+    out_lines = []
+    i = 0
+    while i < len(lines):
+        line = lines[i]
+        h2 = re.match(r"^##+\s+(.*)", line)
+        if h2 and h2.group(1).strip() in section_to_img:
+            out_lines.append(line)
+            img_url, alt = section_to_img[h2.group(1).strip()]
+            out_lines.append(f"![{alt}]({img_url})")
+        else:
+            out_lines.append(line)
+        i += 1
+    return "\n".join(out_lines)
+
+def process_article(md_path, out_article_dir, out_image_dir):
+    print(f"[PROCESS] Article: {md_path}")
+    with open(md_path, "r", encoding="utf-8") as f:
+        text = f.read()
+    frontmatter, content = extract_frontmatter_and_content(text)
+    if not frontmatter:
+        print(f"[PROCESS] No frontmatter found in {md_path}")
+        return
+    fm = parse_yaml_frontmatter(frontmatter)
+    image_tags = fm.get("image_tags", [])
+    print(f"[PROCESS] image_tags: {image_tags}")
+    slug = fm.get("slug") or slugify(fm.get("title", ""))
+    print(f"[PROCESS] slug: {slug}")
+    sections = extract_sections_from_markdown(content)
+    print(f"[PROCESS] Sections found: {len(sections)}")
+    section_to_img = {}
+    used_queries = set()
+    img_count = 0
+    for title, section_text in sections:
+        if img_count >= 2:
+            break
+        print(f"[PROCESS] Section: {title}")
+        queries = [title] + image_tags
+        for q in queries:
+            if q in used_queries:
+                continue
+            used_queries.add(q)
+            img_url, alt = fetch_unsplash_image(q)
+            if not img_url:
+                img_url, alt = fetch_pexels_image(q)
+            if img_url:
+                img_filename = f"{slug}-{slugify(title)}.jpg"
+                img_path = out_image_dir / img_filename
+                if download_image(img_url, img_path):
+                    section_to_img[title] = (f"/public/{out_image_dir.name}/{img_filename}", alt)
+                    img_count += 1
+                    print(f"[PROCESS] Image assigned to section '{title}': {img_filename}")
+                    break
+    print(f"[PROCESS] Total images assigned: {img_count}")
+    new_content = insert_images_in_markdown(content, section_to_img)
+    out_article_dir.mkdir(parents=True, exist_ok=True)
+    out_image_dir.mkdir(parents=True, exist_ok=True)
+    out_path = out_article_dir / md_path.name
+    with open(out_path, "w", encoding="utf-8") as f:
+        f.write(f"---\n{frontmatter}\n---\n{new_content}")
+    print(f"[OK] {md_path} -> {out_path} (images: {img_count})")
+
+def main():
+    # Pick a few articles from 2-3 categories
+    test_articles = [
+        ARTICLE_ROOT / "muratori/strategie-vincenti-per-muratori-come-aumentare-clienti-e-guadagni.md",
+        ARTICLE_ROOT / "falegnami/strategie-vincenti-per-falegnami-come-aumentare-la-presenza-online-e-trovare-nuovi-clienti.md",
+        ARTICLE_ROOT / "dog-sitter/diventare-un-dog-sitter-di-successo-strategie-e-consigli-per-professionisti.md",
+    ]
+    for md_path in test_articles:
+        category = md_path.parts[-2]
+        out_article_dir = OUTPUT_ARTICLE_ROOT / category
+        out_image_dir = OUTPUT_IMAGE_ROOT / category
+        process_article(md_path, out_article_dir, out_image_dir)
+
+if __name__ == "__main__":
+    main()

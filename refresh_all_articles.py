@@ -4,6 +4,7 @@ import random
 from datetime import datetime, timedelta
 from pathlib import Path
 from backend.llm import get_llm
+import yaml
 
 # --- CONFIG ---
 BLOG_ROOT = Path("blog-post")
@@ -80,6 +81,16 @@ def infer_audience_and_info_type(frontmatter, content):
         information_type = ""
     return audience, information_type
 
+def parse_yaml_frontmatter(fm_text):
+    try:
+        return yaml.safe_load(fm_text)
+    except Exception:
+        return {}
+
+def dump_yaml_frontmatter(fm_dict):
+    # Always dump as block style, no nulls
+    return yaml.dump(fm_dict, allow_unicode=True, default_flow_style=False, sort_keys=False).strip()
+
 def process_article(path):
     with open(path, "r", encoding="utf-8") as f:
         text = f.read()
@@ -87,47 +98,72 @@ def process_article(path):
     if not frontmatter:
         print(f"[WARN] No frontmatter in {path}")
         return
+    orig_fm_dict = parse_yaml_frontmatter(frontmatter)
     audience, information_type = infer_audience_and_info_type(frontmatter, content)
     llm = get_llm()
     prompt = f"""
     Audience: {audience}
     Information Type: {information_type}
-    Aggiorna e migliora leggermente il seguente articolo di blog. 
+    Aggiorna e migliora leggermente il seguente articolo di blog.
     Preferisci modifiche minime e leggere, solo dove necessario per chiarezza, aggiornamento o miglioramento dello stile.
-    Non cambiare la struttura o il significato del testo se non strettamente necessario. Restituisci solo il nuovo contenuto markdown, senza frontmatter.
+    Non cambiare la struttura o il significato del testo se non strettamente necessario.
 
-        **Istruzioni per l'aggiornamento:**
-        Segui queste linee guida per aggiornare e migliorare il contenuto dell'articolo:
-        1.  **Scrivi o traduci il testo in italiano:** Mantenendo un tono professionale e accessibile.
-        2.  **Grammatica, Sintassi e Ortografia:** Correggi qualsiasi errore grammaticale, di sintassi o ortografico.
-        3.  **Chiarezza e Scorrevolezza:** Rendi il testo più chiaro, conciso e scorrevole, eliminando frasi ridondanti o ambigue.
-        4.  **Linguaggio:**
-            * Evita l'uso di anglicismi inutili o espressioni colloquiali eccessive, preferendo un italiano standard e professionale.
-            * Mantieni il tono coerente con quello dell'articolo del blog di Mestieri.pro.
-        5.  **Contenuto Sensibile (Competitors):**
-            * **NON menzionare in alcun modo piattaforme competitor** come ChronoShare o ProntoPro.
-            * Se il contenuto originale dovesse per qualche motivo fare riferimento a tali piattaforme, modifica il testo per rimuovere qualsiasi menzione.
-            * In caso sia assolutamente necessario un confronto (sebbene da evitare), riformula il testo in modo da evidenziare sempre e solo i vantaggi e i punti di forza di Mestieri.pro, senza nominare direttamente i competitor.
-        6. **Call To Action:** Se il testo originale non include una call to action, aggiungine una alla fine per invitare i lettori a visitare Mestieri.pro, i professionisti a iscriversi, sulla pagina https://mestieri.pro/info o i potenziali clienti a contattare i professionisti del settore su https://mestieri.pro. Includi link diretti nel markdown per questi due URL.
-        7. **Chiedi sempre di condividere o lasciare un feedback sull'articolo, per migliorare la qualità dei contenuti.
-        8. **Modifiche Minime:** Preferisci modifiche minime e leggere, solo dove necessario per chiarezza, aggiornamento o miglioramento dello stile. Non cambiare la struttura o il significato del testo se non strettamente necessario.
+    Oltre a migliorare il contenuto, aggiorna la frontmatter come segue:
+    - Aggiorna la data a oggi (o a una data recente random tra {DATE_START.date()} e {DATE_END.date()}).
+    - Genera una lista di 5-10 tag ottimizzati per la SEO (brevi, rilevanti, separati da virgola) per il campo tags.
+    - Genera una lista separata di 5-10 tag/descrizioni visive, in italiano, adatti come query per la ricerca di immagini stock, che riflettano i temi, le azioni e gli elementi visivi principali dell'articolo e delle sue sezioni. Inseriscili in un nuovo campo image_tags (separati da virgola).
+    - Restituisci la nuova frontmatter completa (in cima, tra ---), seguita dal contenuto markdown aggiornato.
 
-        **Rispondi solo con il contenuto corretto e migliorato, senza aggiungere commenti o preamboli.**
+    **Istruzioni per l'aggiornamento:**
+    1. Scrivi o traduci il testo in italiano, mantenendo un tono professionale e accessibile.
+    2. Correggi errori grammaticali, di sintassi o ortografici.
+    3. Rendi il testo più chiaro, conciso e scorrevole.
+    4. Evita anglicismi inutili, mantieni un tono coerente con il blog di Mestieri.pro.
+    5. NON menzionare piattaforme competitor come ChronoShare o ProntoPro.
+    6. Se manca, aggiungi una call to action e una richiesta di feedback alla fine.
+    7. Preferisci modifiche minime e leggere.
 
-        Contenuto originale da aggiornare:
-    {content}
+    Rispondi solo con la nuova frontmatter e il contenuto markdown aggiornato, senza commenti o preamboli.
+
+    Contenuto originale da aggiornare:
+{content}
     """
     response = llm.invoke([{"role": "user", "content": prompt}])
-    new_content = response.content if hasattr(response, 'content') else str(response)
-    new_date = random_date(DATE_START, DATE_END)
-    new_frontmatter = update_frontmatter(frontmatter, new_date)
-    # Always write frontmatter at the very top
+    new_text = response.content if hasattr(response, 'content') else str(response)
+    # Try to extract new frontmatter and content
+    new_fm, new_content, _, _ = extract_frontmatter_and_content(new_text)
+    if not new_fm:
+        print(f"[WARN] LLM did not return valid frontmatter for {path}, skipping.")
+        return
+    # Parse new tags and image_tags from LLM output
+    new_fm_dict = parse_yaml_frontmatter(new_fm)
+    # Always preserve all original fields and types
+    merged_fm = orig_fm_dict.copy()
+    # Update date if present in new frontmatter, else keep original
+    if 'date' in new_fm_dict:
+        merged_fm['date'] = str(new_fm_dict['date'])
+    # Update tags as array if present
+    if 'tags' in new_fm_dict:
+        tags = new_fm_dict['tags']
+        if isinstance(tags, str):
+            tags = [t.strip() for t in tags.split(',') if t.strip()]
+        merged_fm['tags'] = tags
+    # Update image_tags as array if present
+    if 'image_tags' in new_fm_dict:
+        image_tags = new_fm_dict['image_tags']
+        if isinstance(image_tags, str):
+            image_tags = [t.strip() for t in image_tags.split(',') if t.strip()]
+        merged_fm['image_tags'] = image_tags
+    # Dump merged frontmatter as YAML
+    merged_fm_yaml = dump_yaml_frontmatter(merged_fm)
     with open(path, "w", encoding="utf-8") as f:
-        f.write(f"---\n{new_frontmatter}\n---\n{new_content}")
+        f.write(f"---\n{merged_fm_yaml}\n---\n{new_content}")
     print(f"[OK] Refreshed: {path}")
 
 def main():
-    for md_path in BLOG_ROOT.glob("**/*.md"):
+    # Only process the first 4 markdown files in muratori/ for testing
+    test_files = list(Path("blog-post/muratori").glob("*.md"))[:4]
+    for md_path in test_files:
         process_article(md_path)
 
 if __name__ == "__main__":
