@@ -4,6 +4,9 @@ import requests
 from pathlib import Path
 import yaml
 from urllib.parse import quote
+import torch
+import clip
+from PIL import Image
 
 # --- CONFIG ---
 ARTICLE_ROOT = Path("blog-post")
@@ -12,6 +15,11 @@ OUTPUT_IMAGE_ROOT = Path(os.path.expanduser("~/quadro/mestieri/public"))
 UNSPLASH_KEY = "2PO5W5bjDSuq1ISHYsP9WNuLWctqHxZb33bOdi6ZOzQ"
 PEXELS_KEY = "563492ad6f917000010000011093a5f01ff04840900a4ff5ca8ad7cd"
 HEADERS_PEXELS = {"Authorization": PEXELS_KEY}
+CLIP_THRESHOLD = 0.30
+
+# Load CLIP model once
+clip_device = "cuda" if torch.cuda.is_available() else "cpu"
+clip_model, clip_preprocess = clip.load("ViT-B/32", device=clip_device)
 
 # --- HELPERS ---
 def extract_frontmatter_and_content(text):
@@ -119,6 +127,22 @@ def insert_images_in_markdown(md_text, section_to_img):
         i += 1
     return "\n".join(out_lines)
 
+def clip_score(img_path, query):
+    pil_image = Image.open(img_path)
+    tensor = clip_preprocess(pil_image)
+    if isinstance(tensor, torch.Tensor):
+        tensor = tensor.unsqueeze(0).to(clip_device)
+    else:
+        return 0.0
+    text = clip.tokenize([query]).to(clip_device)
+    with torch.no_grad():
+        image_features = clip_model.encode_image(tensor)
+        text_features = clip_model.encode_text(text)
+        image_features /= image_features.norm(dim=-1, keepdim=True)
+        text_features /= text_features.norm(dim=-1, keepdim=True)
+        similarity = (image_features @ text_features.T).item()
+    return similarity
+
 def process_article(md_path, out_article_dir, out_image_dir):
     print(f"[PROCESS] Article: {md_path}")
     with open(md_path, "r", encoding="utf-8") as f:
@@ -137,6 +161,9 @@ def process_article(md_path, out_article_dir, out_image_dir):
     section_to_img = {}
     used_queries = set()
     img_count = 0
+    # Image cache directory for rejected images
+    image_cache_dir = out_image_dir.parent / "_image_cache"
+    image_cache_dir.mkdir(parents=True, exist_ok=True)
     for title, section_text in sections:
         if img_count >= 2:
             break
@@ -146,17 +173,42 @@ def process_article(md_path, out_article_dir, out_image_dir):
             if q in used_queries:
                 continue
             used_queries.add(q)
+            img_filename = f"{slug}-{slugify(title)}.jpg"
+            img_path = out_image_dir / img_filename
+            cache_path = image_cache_dir / img_filename
+            # Check cache first
+            if cache_path.exists():
+                print(f"[CACHE] Found cached image for '{q}': {cache_path}")
+                score = clip_score(cache_path, q)
+                print(f"[CLIP] (CACHE) {img_filename} <-> '{q}' score: {score:.4f}")
+                if score >= CLIP_THRESHOLD:
+                    # Copy from cache to output dir
+                    cache_path.replace(img_path)
+                    section_to_img[title] = (f"/public/{out_image_dir.name}/{img_filename}", q)
+                    img_count += 1
+                    print(f"[PROCESS] Image ACCEPTED from cache for section '{title}': {img_filename}")
+                    break
+                else:
+                    print(f"[PROCESS] Cached image still not valid for section '{title}': {img_filename}")
+                    continue
+            # If not in cache, fetch from API
             img_url, alt = fetch_unsplash_image(q)
             if not img_url:
                 img_url, alt = fetch_pexels_image(q)
             if img_url:
-                img_filename = f"{slug}-{slugify(title)}.jpg"
-                img_path = out_image_dir / img_filename
                 if download_image(img_url, img_path):
-                    section_to_img[title] = (f"/public/{out_image_dir.name}/{img_filename}", alt)
-                    img_count += 1
-                    print(f"[PROCESS] Image assigned to section '{title}': {img_filename}")
-                    break
+                    score = clip_score(img_path, q)
+                    print(f"[CLIP] {img_filename} <-> '{q}' score: {score:.4f}")
+                    if score >= CLIP_THRESHOLD:
+                        section_to_img[title] = (f"/public/{out_image_dir.name}/{img_filename}", alt)
+                        img_count += 1
+                        print(f"[PROCESS] Image ACCEPTED for section '{title}': {img_filename}")
+                        break
+                    else:
+                        print(f"[PROCESS] Image REJECTED for section '{title}': {img_filename}")
+                        # Move rejected image to cache instead of deleting
+                        img_path.replace(cache_path)
+                        print(f"[CACHE] Moved rejected image to: {cache_path}")
     print(f"[PROCESS] Total images assigned: {img_count}")
     new_content = insert_images_in_markdown(content, section_to_img)
     out_article_dir.mkdir(parents=True, exist_ok=True)

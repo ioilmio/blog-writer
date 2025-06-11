@@ -109,10 +109,48 @@ def process_article(path):
     Non cambiare la struttura o il significato del testo se non strettamente necessario.
 
     Oltre a migliorare il contenuto, aggiorna la frontmatter come segue:
-    - Aggiorna la data a oggi (o a una data recente random tra {DATE_START.date()} e {DATE_END.date()}).
-    - Genera una lista di 5-10 tag ottimizzati per la SEO (brevi, rilevanti, separati da virgola) per il campo tags.
-    - Genera una lista separata di 5-10 tag/descrizioni visive, in italiano, adatti come query per la ricerca di immagini stock, che riflettano i temi, le azioni e gli elementi visivi principali dell'articolo e delle sue sezioni. Inseriscili in un nuovo campo image_tags (separati da virgola).
+    - Aggiorna la data a una data recente random tra {DATE_START.date()} e {DATE_END.date()}.
+    - Genera una lista di 5-10 tag ottimizzati per la SEO (brevi, rilevanti, in italiano, come parole chiave, array YAML) per il campo tags.
+    - Genera una lista separata di 5-10 image_tags (array YAML): concetti visivi, oggetti o scene rilevanti per l'articolo, adatti come query per la ricerca di immagini stock, che riflettano i temi, le azioni e gli elementi visivi principali dell'articolo e delle sue sezioni.
+    - Mantieni tutti gli altri campi della frontmatter invariati.
     - Restituisci la nuova frontmatter completa (in cima, tra ---), seguita dal contenuto markdown aggiornato.
+
+    Esempi:
+    ---
+    title: Come trovare il miglior dog sitter
+    ...
+    tags:
+      - dog sitter
+      - cura animali
+      - servizi per animali
+      - passeggiata con il cane
+      - animali domestici
+    image_tags:
+      - cane felice
+      - passeggiata cane
+      - pet sitter
+      - guinzaglio
+      - parco per cani
+    ---
+    ...
+
+    ---
+    title: Strategie per una ristrutturazione di successo
+    ...
+    tags:
+      - ristrutturazione casa
+      - lavori edili
+      - progettazione interni
+      - edilizia
+      - consigli casa
+    image_tags:
+      - cantiere edile
+      - strumenti da lavoro
+      - casa ristrutturata
+      - architetto
+      - progetto edilizio
+    ---
+    ...
 
     **Istruzioni per l'aggiornamento:**
     1. Scrivi o traduci il testo in italiano, mantenendo un tono professionale e accessibile.

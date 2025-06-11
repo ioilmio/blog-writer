@@ -32,7 +32,7 @@ def get_llm():
             raise ValueError("GROQ_API_KEY is not set in environment.")
         return ChatGroq(api_key=GROQ_API_KEY, model="meta-llama/llama-4-scout-17b-16e-instruct", temperature=0.5)
     else:
-        return ChatOllama(model="granite3.3:2b", temperature=0.5)
+        return ChatOllama(model="llama3.1:latest", temperature=0.5)
 
 # Use the LLM factory for all LLM calls
 llm = get_llm()
