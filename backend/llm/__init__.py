@@ -7,6 +7,7 @@ import json
 from langchain_cerebras import ChatCerebras
 from langchain_groq import ChatGroq
 import os
+import re
 
 class BlogArticle(BaseModel):
     title: str = Field(description="The title of the blog article")
@@ -38,6 +39,7 @@ def get_llm():
 llm = get_llm()
 # Template for generating blog articles
 BLOG_TEMPLATE = """
+IMPORTANTE: Rispondi SOLO con un oggetto JSON valido che rispetta lo schema fornito. Niente markdown, niente spiegazioni, niente testo extra. Solo JSON.\n
 Scrivi un articolo di blog in italiano, altamente informativo e accattivante, per il mercato e il pubblico italiano sull'argomento: \"{topic}\".
 
 Audience: {audience}
@@ -78,6 +80,16 @@ Non menzionare altre piattaforme come ChronoShare o ProntoPro che sono competito
 {format_instructions}
 """
 
+# Helper to extract first JSON object from a string
+def extract_json(text):
+    match = re.search(r'{.*}', text, re.DOTALL)
+    if match:
+        try:
+            return match.group(0)
+        except Exception:
+            pass
+    return text
+
 # Initialize the parser
 parser = PydanticOutputParser(pydantic_object=BlogArticle)
 
@@ -91,12 +103,13 @@ prompt = PromptTemplate(
 async def generate_article(topic: str, additional_context: str = "", audience: str = "") -> BlogArticle:
     try:
         _prompt = prompt.format(topic=topic, additional_context=additional_context, audience=audience)
-        # Use ainvoke for ChatOllama and pass a list of messages
         response = await llm.ainvoke([
             {"role": "user", "content": _prompt}
         ])
         print("[LLM] response article.", response)
-        article = parser.parse(response.content)
+        # Extract JSON if extra text is present
+        json_text = extract_json(response.content)
+        article = parser.parse(json_text)
         print("[LLM] parsed article.", article)
         return article
     except Exception as e:

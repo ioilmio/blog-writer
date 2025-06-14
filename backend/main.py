@@ -207,52 +207,59 @@ async def generate_article_node(state: OverallState):
 # Node: Finalize article
 async def finalize_article(state: OverallState):
     print("**************************\n[DEBUG] finalize_article state.article:", state.article)
-    now = datetime.now().strftime("%Y-%m-%d")
-    slug = slugify(state.article['title'], lowercase=True)
-    # Proofreading step using LLM
-    original_content = state.article['content']
-    audience = "clienti in cerca di servizi" if state.customer_audience else "professionisti del settore"
-
-    proofreading_prompt = f"""
-        Il tuo compito è correggere e migliorare il contenuto fornito, assicurandoti che sia impeccabile dal punto di vista grammaticale, ortografico e della chiarezza.
-
-        **Istruzioni per la correzione:**
-
-        1.  **Grammatica, Sintassi e Ortografia:** Correggi qualsiasi errore grammaticale, di sintassi o ortografico.
-        2.  **Chiarezza e Scorrevolezza:** Rendi il testo più chiaro, conciso e scorrevole, eliminando frasi ridondanti o ambigue.
-        3.  **Linguaggio:**
-            * Evita l'uso di anglicismi inutili o espressioni colloquiali eccessive, preferendo un italiano standard e professionale.
-            * Mantieni il tono coerente con quello di un articolo {state.information_type} destinato a {audience} del blog di Mestieri.pro.
-        4.  **Contenuto Sensibile (Competitors):**
-            * **NON menzionare in alcun modo piattaforme competitor** come ChronoShare o ProntoPro.
-            * Se il contenuto originale dovesse per qualche motivo fare riferimento a tali piattaforme, modifica il testo per rimuovere qualsiasi menzione.
-            * In caso sia assolutamente necessario un confronto (sebbene da evitare), riformula il testo in modo da evidenziare sempre e solo i vantaggi e i punti di forza di Mestieri.pro, senza nominare direttamente i competitor.
-        5. **Call To Action:** Se il testo originale non include una call to action, aggiungine una alla fine per invitare i lettori a visitare Mestieri.pro, i professionisti a iscriversi, sulla pagina https://mestieri.pro/info o i potenziali clienti a contattare i professionisti del settore.
-        6. **Chiedi semnpre di condividere o lasciare un feedback sull'articolo, per migliorare la qualità dei contenuti.
-        7. **Modifiche Minime:** Preferisci modifiche minime e leggere, solo dove necessario per chiarezza, aggiornamento o miglioramento dello stile. Non cambiare la struttura o il significato del testo se non strettamente necessario.
-
-        **Rispondi solo con il contenuto corretto e migliorato, senza aggiungere commenti o preamboli.**
-
-        Contenuto originale da correggere:
-        {original_content}
-        """
+    if state.article is None:
+        print("[ERROR] state.article is None in finalize_article. State:", state)
+        raise HTTPException(status_code=500, detail="Article generation failed: state.article is None.")
     try:
-        llm = get_llm()
-        improved_content = await llm.ainvoke([{"role": "user", "content": proofreading_prompt}])    
-        if hasattr(improved_content, 'content'):
-            improved_content = improved_content.content
+        now = datetime.now().strftime("%Y-%m-%d")
+        slug = slugify(state.article['title'], lowercase=True)
+        # Proofreading step using LLM
+        original_content = state.article['content']
+        audience = "clienti in cerca di servizi" if state.customer_audience else "professionisti del settore"
+
+        proofreading_prompt = f"""
+            Il tuo compito è correggere e migliorare il contenuto fornito, assicurandoti che sia impeccabile dal punto di vista grammaticale, ortografico e della chiarezza.
+
+            **Istruzioni per la correzione:**
+
+            1.  **Grammatica, Sintassi e Ortografia:** Correggi qualsiasi errore grammaticale, di sintassi o ortografico.
+            2.  **Chiarezza e Scorrevolezza:** Rendi il testo più chiaro, conciso e scorrevole, eliminando frasi ridondanti o ambigue.
+            3.  **Linguaggio:**
+                * Evita l'uso di anglicismi inutili o espressioni colloquiali eccessive, preferendo un italiano standard e professionale.
+                * Mantieni il tono coerente con quello di un articolo {state.information_type} destinato a {audience} del blog di Mestieri.pro.
+            4.  **Contenuto Sensibile (Competitors):**
+                * **NON menzionare in alcun modo piattaforme competitor** come ChronoShare o ProntoPro.
+                * Se il contenuto originale dovesse per qualche motivo fare riferimento a tali piattaforme, modifica il testo per rimuovere qualsiasi menzione.
+                * In caso sia assolutamente necessario un confronto (sebbene da evitare), riformula il testo in modo da evidenziare sempre e solo i vantaggi e i punti di forza di Mestieri.pro, senza nominare direttamente i competitor.
+            5. **Call To Action:** Se il testo originale non include una call to action, aggiungine una alla fine per invitare i lettori a visitare Mestieri.pro, i professionisti a iscriversi, sulla pagina https://mestieri.pro/info o i potenziali clienti a contattare i professionisti del settore.
+            6. **Chiedi semnpre di condividere o lasciare un feedback sull'articolo, per migliorare la qualità dei contenuti.
+            7. **Modifiche Minime:** Preferisci modifiche minime e leggere, solo dove necessario per chiarezza, aggiornamento o miglioramento dello stile. Non cambiare la struttura o il significato del testo se non strettamente necessario.
+
+            **Rispondi solo con il contenuto corretto e migliorato, senza aggiungere commenti o preamboli.**
+
+            Contenuto originale da correggere:
+            {original_content}
+            """
+        try:
+            llm = get_llm()
+            improved_content = await llm.ainvoke([{"role": "user", "content": proofreading_prompt}])    
+            if hasattr(improved_content, 'content'):
+                improved_content = improved_content.content
+        except Exception as e:
+            print(f"[PROOFREAD ERROR] {e}, using original content.")
+            improved_content = original_content
+        return Article(
+            title=state.article['title'],
+            date=now,
+            excerpt=state.article['excerpt'],
+            slug=slug,
+            topic=state.topic,
+            tags=state.article['tags'],
+            content=improved_content
+        )
     except Exception as e:
-        print(f"[PROOFREAD ERROR] {e}, using original content.")
-        improved_content = original_content
-    return Article(
-        title=state.article['title'],
-        date=now,
-        excerpt=state.article['excerpt'],
-        slug=slug,
-        topic=state.topic,
-        tags=state.article['tags'],
-        content=improved_content
-    )
+        print(f"[ERROR] Exception in finalize_article: {e}")
+        raise HTTPException(status_code=500, detail=f"Exception in finalize_article: {e}")
 
 # --- RAG: Store and retrieve similar articles ---
 async def enrich_with_similar_articles(article: Article):
@@ -289,7 +296,7 @@ async def generate_article_endpoint(article_input: ArticleInput):
         workflow = get_workflow()
         state = OverallState(
             topic=article_input.topic,
-            additional_context=article_input.additional_context,
+            additional_context=article_input.additional_context or "",
             customer_audience=article_input.customer_audience,
             information_type=article_input.information_type,
             output_dir=None,  # Do not use output_dir, always use topic-based dir
@@ -305,7 +312,9 @@ async def generate_article_endpoint(article_input: ArticleInput):
             article = result["article"]
             article["date"] = result.get("date") or datetime.now().strftime("%Y-%m-%d")
             article["slug"] = result.get("slug") or slugify(article["title"], lowercase=True)
-            article["topic"] = result.get("topic") or state.topic
+        else:
+            print(f"[ERROR] Article generation failed, result: {result}")
+            raise HTTPException(status_code=500, detail="Article generation failed: No valid article returned.")
         # Only auto-save if autosave flag is set
         if article and getattr(article_input, "autosave", False):
             await save_article(Article(**article))
@@ -315,6 +324,7 @@ async def generate_article_endpoint(article_input: ArticleInput):
             article["additional_context"] = enrichment
         return article if article else HTTPException(status_code=500, detail="Article not generated")
     except Exception as e:
+        print(f"[ERROR] Exception in generate_article_endpoint: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 # --- API endpoint for manual retrieval ---

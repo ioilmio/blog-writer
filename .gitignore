@@ -25,8 +25,6 @@ dist-ssr
 venv
 .aider*
 .env
-**/__pycache__/
-**/__pycache__/*
 *.pyc
 
 neo4j_data/

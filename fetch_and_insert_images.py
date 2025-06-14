@@ -219,17 +219,21 @@ def process_article(md_path, out_article_dir, out_image_dir):
     print(f"[OK] {md_path} -> {out_path} (images: {img_count})")
 
 def main():
-    # Pick a few articles from 2-3 categories
-    test_articles = [
-        ARTICLE_ROOT / "muratori/strategie-vincenti-per-muratori-come-aumentare-clienti-e-guadagni.md",
-        ARTICLE_ROOT / "falegnami/strategie-vincenti-per-falegnami-come-aumentare-la-presenza-online-e-trovare-nuovi-clienti.md",
-        ARTICLE_ROOT / "dog-sitter/diventare-un-dog-sitter-di-successo-strategie-e-consigli-per-professionisti.md",
-    ]
-    for md_path in test_articles:
-        category = md_path.parts[-2]
-        out_article_dir = OUTPUT_ARTICLE_ROOT / category
-        out_image_dir = OUTPUT_IMAGE_ROOT / category
-        process_article(md_path, out_article_dir, out_image_dir)
+    import sys
+    if len(sys.argv) > 1:
+        for arg in sys.argv[1:]:
+            md_path = Path(arg)
+            if not md_path.exists():
+                print(f"[WARN] File not found: {md_path}")
+                continue
+            category = md_path.parts[-2]
+            out_article_dir = OUTPUT_ARTICLE_ROOT / category
+            out_image_dir = OUTPUT_IMAGE_ROOT / category
+            process_article(md_path, out_article_dir, out_image_dir)
+    else:
+        print("Usage: python fetch_and_insert_images.py <file1.md> <file2.md> ...")
+        print("No files specified. Exiting.")
+        sys.exit(1)
 
 if __name__ == "__main__":
     main()

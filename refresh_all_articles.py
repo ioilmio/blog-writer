@@ -199,10 +199,15 @@ def process_article(path):
     print(f"[OK] Refreshed: {path}")
 
 def main():
-    # Only process the first 4 markdown files in muratori/ for testing
-    test_files = list(Path("blog-post/muratori").glob("*.md"))[:4]
-    for md_path in test_files:
-        process_article(md_path)
+    import sys
+    if len(sys.argv) > 1:
+        test_files = [Path(arg) for arg in sys.argv[1:]]
+        for md_path in test_files:
+            process_article(md_path)
+    else:
+        print("Usage: python refresh_all_articles.py <file1.md> <file2.md> ...")
+        print("No files specified. Exiting.")
+        sys.exit(1)
 
 if __name__ == "__main__":
     main()

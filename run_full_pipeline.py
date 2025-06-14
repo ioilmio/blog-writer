@@ -19,9 +19,15 @@ def check_service(name, check_cmd, start_task=None):
         else:
             print(f"[INFO] {name} not running. Starting...")
             if start_task:
-                subprocess.run(start_task, shell=True)
-                print(f"[OK] {name} started.")
-                return True
+                # Start FastAPI directly in the background if requested
+                if name == "FastAPI Backend":
+                    subprocess.Popen(["uvicorn", "backend.main:app", "--reload", "--host", "0.0.0.0", "--port", "8000"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                    print(f"[OK] {name} started (direct uvicorn call).")
+                    return True
+                else:
+                    subprocess.run(start_task, shell=True)
+                    print(f"[OK] {name} started.")
+                    return True
             else:
                 print(f"[WARN] No start command for {name}.")
                 return False
@@ -29,26 +35,103 @@ def check_service(name, check_cmd, start_task=None):
         print(f"[ERROR] Checking/starting {name}: {e}")
         return False
 
+def get_test_articles():
+    # Hardcoded test set: category, audience, information_type
+    # Each tuple: (category, audience, information_type)
+    categories = [
+        ("dj",),
+        ("fabbri",),
+        ("estetisti",),
+        ("doposcuola",),
+    ]
+    audiences = ["clienti in cerca di servizi", "professionisti del settore"]
+    info_types = ["guida pratica", "strategie e tendenze"]
+    # Build all combinations
+    test_cases = []
+    for cat_tuple in categories:
+        cat = cat_tuple[0]
+        for audience in audiences:
+            for info_type in info_types:
+                test_cases.append((cat, audience, info_type))
+    return test_cases
+
+def upsert_all_articles_to_neo4j(files=None):
+    from backend.llm.neo4j_rag import upsert_article_in_neo4j
+    import yaml
+    from pathlib import Path
+    blog_dir = Path("blog-post")
+    if files is None:
+        files = list(blog_dir.glob("**/*.md"))
+    for md_file in files:
+        with open(md_file, "r", encoding="utf-8") as f:
+            lines = f.read().split('---')
+            if len(lines) < 3:
+                continue
+            frontmatter = yaml.safe_load(lines[1])
+            content = lines[2].strip()
+            article = dict(frontmatter)
+            article["content"] = content
+            upsert_article_in_neo4j(article)
+
 def step_generate():
-    print("[STEP] Blog post generation...")
-    result = subprocess.run([sys.executable, "generate_all_blog_posts.py"])
-    if result.returncode != 0:
-        print("[ERROR] Blog post generation failed.")
-        sys.exit(1)
+    print("[STEP] Blog post generation and Neo4j sync...")
+    test_cases = get_test_articles()
+    from generate_all_blog_posts import generate_and_save_article
+    generated_files = []
+    for cat, audience, info_type in test_cases:
+        # Compose topic and output path
+        topic = f"{cat.title()} - {info_type}"
+        output_path = f"blog-post/{cat}/{cat}-{audience.replace(' ', '-')}-{info_type.replace(' ', '-')}.md"
+        # Map audience string to booleans
+        if audience == "clienti in cerca di servizi":
+            customer_audience = True
+            professional_copy = False
+        else:
+            customer_audience = False
+            professional_copy = True
+        additional_context = ""
+        # Send professional_copy as string for FastAPI compatibility
+        generate_and_save_article(
+            topic,
+            additional_context,
+            customer_audience,
+            info_type,
+            output_path,
+            str(professional_copy).lower()  # 'true' or 'false' as string
+        )
+        generated_files.append(Path(output_path))
+    upsert_all_articles_to_neo4j(generated_files)
+    print("[STEP] All generated articles upserted to Neo4j.")
 
 def step_refresh():
-    print("[STEP] Refreshing articles...")
-    result = subprocess.run([sys.executable, "refresh_all_articles.py"])
+    print("[STEP] Refreshing articles and Neo4j sync...")
+    test_cases = get_test_articles()
+    files = []
+    for cat, audience, info_type in test_cases:
+        path = Path(f"blog-post/{cat}/{cat}-{audience.replace(' ', '-')}-{info_type.replace(' ', '-')}.md")
+        if path.exists():
+            files.append(path)
+    result = subprocess.run([sys.executable, "refresh_all_articles.py"] + [str(f) for f in files])
     if result.returncode != 0:
         print("[ERROR] Article refresh failed.")
         sys.exit(1)
+    upsert_all_articles_to_neo4j(files)
+    print("[STEP] All refreshed articles upserted to Neo4j.")
 
 def step_images():
     print("[STEP] Fetching and inserting images...")
-    result = subprocess.run([sys.executable, "fetch_and_insert_images.py"])
+    test_cases = get_test_articles()
+    files = []
+    for cat, audience, info_type in test_cases:
+        path = Path(f"blog-post/{cat}/{cat}-{audience.replace(' ', '-')}-{info_type.replace(' ', '-')}.md")
+        if path.exists():
+            files.append(path)
+    result = subprocess.run([sys.executable, "fetch_and_insert_images.py"] + [str(f) for f in files])
     if result.returncode != 0:
         print("[ERROR] Image fetch/insertion failed.")
         sys.exit(1)
+    upsert_all_articles_to_neo4j(files)
+    print("[STEP] All articles with images upserted to Neo4j.")
 
 def main():
     parser = argparse.ArgumentParser(description="Run the full blog pipeline with step control.")
