@@ -14,6 +14,11 @@ from langgraph.graph import StateGraph, END, START
 from backend.llm import generate_article as llm_generate_article, get_llm
 from backend.llm.neo4j_rag import upsert_article_in_neo4j, retrieve_similar_articles
 from neo4j import GraphDatabase
+import uuid
+import json
+from fastapi import BackgroundTasks, Request
+from threading import Lock
+import re  # Ensure re is imported at the top
 load_dotenv()
 
 tavily_api_key = os.getenv("TAVILY_API_KEY")  # Access the variable
@@ -125,9 +130,10 @@ async def generate_search_query(state: OverallState):
     llm = get_llm()
     try:
         response = await llm.ainvoke([{"role": "user", "content": prompt}])
-        print("**************************\n[LLM] Response for search query:\n", response.content)
-        import re
-        match = re.search(r"<query>(.*?)</query>", response.content, re.DOTALL)
+        content = getattr(response, 'content', response)
+        if not isinstance(content, str):
+            content = str(content)
+        match = re.search(r"<query>(.*?)</query>", content, re.DOTALL)
         if not match:
             print("**************************\n[LLM] WARNING: No <query> tag found in response. Using topic as query.")
             query = state.topic
@@ -155,7 +161,13 @@ async def perform_web_search(state: OverallState):
 # Node: Summarize sources using LLM
 async def summarize_sources(state: OverallState):
     print(state, "state")
-    search_snippets = "\n".join([r.get('content','') for r in state.web_search_results.get('results', [])])
+    # Defensive: ensure web_search_results is a dict with 'results' key
+    results = getattr(state, 'web_search_results', {})
+    if isinstance(results, dict):
+        result_list = results.get('results', [])
+    else:
+        result_list = []
+    search_snippets = "\n".join([r.get('content','') for r in result_list if isinstance(r, dict)])
     audience = "clienti in cerca di servizi" if state.customer_audience else "professionisti del settore"
     prompt = f"""
     Genera un riassunto di alta qualità e altamente informativo dei seguenti risultati di ricerca web per l'argomento: {state.topic}.
@@ -167,9 +179,10 @@ async def summarize_sources(state: OverallState):
     print("**************************\n[LLM] Prompt for summarization:\n", prompt)
     llm = get_llm()
     response = await llm.ainvoke([{"role": "user", "content": prompt}])
-    print("**************************\n[LLM] Response for summarization:\n", response.content)
-    import re
-    match = re.search(r"<summary>(.*?)</summary>", response.content, re.DOTALL)
+    content = getattr(response, 'content', response)
+    if not isinstance(content, str):
+        content = str(content)
+    match = re.search(r"<summary>(.*?)</summary>", content, re.DOTALL)
     summary = match.group(1).strip() if match else ""
     return {"summary": summary}
 
@@ -245,6 +258,8 @@ async def finalize_article(state: OverallState):
             improved_content = await llm.ainvoke([{"role": "user", "content": proofreading_prompt}])    
             if hasattr(improved_content, 'content'):
                 improved_content = improved_content.content
+            if not isinstance(improved_content, str):
+                improved_content = str(improved_content)
         except Exception as e:
             print(f"[PROOFREAD ERROR] {e}, using original content.")
             improved_content = original_content
@@ -337,4 +352,136 @@ async def retrieve_articles(query: str = Query(..., description="Query for hybri
         return [{"title": r.metadata.get("title"), "excerpt": r.metadata.get("excerpt"), "slug": r.metadata.get("slug"), "score": getattr(r, "score", None)} for r in results]
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+JOBS_FILE = "pipeline_jobs.json"
+jobs_lock = Lock()
+
+# --- Job State Management ---
+def load_jobs():
+    if not os.path.exists(JOBS_FILE):
+        return {}
+    with open(JOBS_FILE, "r", encoding="utf-8") as f:
+        return json.load(f)
+
+def save_jobs(jobs):
+    with jobs_lock:
+        with open(JOBS_FILE, "w", encoding="utf-8") as f:
+            json.dump(jobs, f, ensure_ascii=False, indent=2)
+
+def update_job(job_id, update):
+    jobs = load_jobs()
+    if job_id not in jobs:
+        jobs[job_id] = {}
+    jobs[job_id].update(update)
+    save_jobs(jobs)
+
+def get_job(job_id):
+    jobs = load_jobs()
+    return jobs.get(job_id)
+
+# --- Modular Pipeline Steps ---
+async def step_generate(article_input):
+    try:
+        result = await generate_article_endpoint(ArticleInput(**article_input))
+        return {"status": "waiting_approval", "result": result}
+    except Exception as e:
+        return {"status": "error", "error": str(e)}
+
+async def step_image(article):
+    # Placeholder: integrate image insertion logic here
+    # For now, just pass through
+    return {"status": "waiting_approval", "result": article}
+
+async def step_upsert(article):
+    try:
+        upsert_article_in_neo4j(article)
+        return {"status": "done", "result": article}
+    except Exception as e:
+        return {"status": "error", "error": str(e)}
+
+# --- Pipeline Runner ---
+async def run_pipeline_job(job_id, job_data):
+    steps = job_data.get("steps", ["generate", "image", "upsert"])
+    article_input = job_data["article_input"]
+    state = {}
+    for step in steps:
+        if step == "generate":
+            res = await step_generate(article_input)
+            update_job(job_id, {"current_step": step, "generate": res})
+            if res["status"] != "waiting_approval":
+                break
+            return  # Wait for approval
+        elif step == "image":
+            job_state = get_job(job_id) or {}
+            article = job_state.get("generate", {}).get("result") if job_state.get("generate") else None
+            res = await step_image(article)
+            update_job(job_id, {"current_step": step, "image": res})
+            if res["status"] != "waiting_approval":
+                break
+            return
+        elif step == "upsert":
+            job_state = get_job(job_id) or {}
+            article = job_state.get("image", {}).get("result") if job_state.get("image") else None
+            res = await step_upsert(article)
+            update_job(job_id, {"current_step": step, "upsert": res})
+            if res["status"] != "done":
+                break
+    update_job(job_id, {"status": "finished"})
+
+# --- API Endpoints ---
+@app.post("/api/pipeline/run")
+async def api_pipeline_run(article_input: dict, background_tasks: BackgroundTasks):
+    job_id = str(uuid.uuid4())
+    job_data = {"article_input": article_input, "steps": ["generate", "image", "upsert"], "status": "running"}
+    update_job(job_id, job_data)
+    background_tasks.add_task(run_pipeline_job, job_id, job_data)
+    return {"job_id": job_id}
+
+@app.post("/api/pipeline/batch")
+async def api_pipeline_batch(batch: dict, background_tasks: BackgroundTasks):
+    job_ids = []
+    for article_input in batch.get("articles", []):
+        job_id = str(uuid.uuid4())
+        job_data = {"article_input": article_input, "steps": batch.get("steps", ["generate", "image", "upsert"]), "status": "running"}
+        update_job(job_id, job_data)
+        background_tasks.add_task(run_pipeline_job, job_id, job_data)
+        job_ids.append(job_id)
+    return {"job_ids": job_ids}
+
+@app.get("/api/pipeline/status/{job_id}")
+async def api_pipeline_status(job_id: str):
+    job = get_job(job_id)
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+    return job
+
+@app.post("/api/pipeline/approve/{job_id}/{step}")
+async def api_pipeline_approve(job_id: str, step: str, request: Request, background_tasks: BackgroundTasks):
+    data = await request.json()
+    job = get_job(job_id)
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+    # Update step result with approved/edited data
+    job[step]["status"] = "approved"
+    job[step]["result"] = data.get("result", job[step]["result"])
+    update_job(job_id, job)
+    # Resume pipeline from next step
+    background_tasks.add_task(run_pipeline_job, job_id, job)
+    return {"status": "resumed"}
+
+@app.post("/api/pipeline/retry/{job_id}/{step}")
+async def api_pipeline_retry(job_id: str, step: str, background_tasks: BackgroundTasks):
+    job = get_job(job_id)
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+    # Remove failed step and resume
+    if step in job:
+        del job[step]
+    update_job(job_id, job)
+    background_tasks.add_task(run_pipeline_job, job_id, job)
+    return {"status": "retrying"}
+
+@app.get("/health")
+def health_check():
+    return {"status": "ok"}
 

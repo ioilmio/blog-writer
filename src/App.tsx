@@ -3,6 +3,7 @@ import { useForm } from 'react-hook-form';
 import { FileEdit, Save, Loader2 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import type { Article, ArticleInput } from './types/Article';
+import PipelineDashboard from './PipelineDashboard';
 
 function App() {
   const [article, setArticle] = useState<Article | null>(null);
@@ -59,6 +60,7 @@ function App() {
   return (
     <div className="min-h-screen bg-gray-100 p-8">
       <div className="max-w-4xl mx-auto space-y-8">
+        {/* Existing article generator UI */}
         <div className="bg-white p-6 rounded-lg shadow-md">
           <h1 className="text-2xl font-bold mb-6">Blog Article Generator</h1>
           
@@ -137,7 +139,6 @@ function App() {
             </button>
           </form>
         </div>
-
         {article && (
           <div className="bg-white p-6 rounded-lg shadow-md">
             <div className="flex justify-between items-center mb-4">
@@ -166,6 +167,8 @@ function App() {
             </div>
           </div>
         )}
+        {/* Pipeline Dashboard UI */}
+        <PipelineDashboard />
       </div>
     </div>
   );
