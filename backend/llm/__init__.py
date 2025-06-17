@@ -1,7 +1,7 @@
 from langchain_ollama import ChatOllama
 from langchain.prompts import PromptTemplate
 from langchain.output_parsers import PydanticOutputParser
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, SecretStr
 from typing import List
 import json
 from langchain_cerebras import ChatCerebras
@@ -16,7 +16,7 @@ class BlogArticle(BaseModel):
     content: str = Field(description="The main content of the article in markdown format")
 
 # Select LLM provider based on environment variable
-LLM_PROVIDER = os.getenv("LLM_PROVIDER", "").strip().lower().replace('"', '').replace("'", "")  # 'ollama' or 'cerebras' or 'groq'
+LLM_PROVIDER = os.getenv("LLM_PROVIDER", "").strip().lower()  # 'ollama' or 'cerebras' or 'groq'
 
 # Read Cerebras API key from environment
 CEREBRAS_API_KEY = os.getenv("CEREBRAS_API_KEY")
@@ -27,11 +27,11 @@ def get_llm():
     if LLM_PROVIDER == "cerebras":
         if not CEREBRAS_API_KEY:
             raise ValueError("CEREBRAS_API_KEY is not set in environment.")
-        return ChatCerebras(api_key=CEREBRAS_API_KEY, model="llama-4-scout-17b-16e-instruct", temperature=0.5)
+        return ChatCerebras(api_key=SecretStr(CEREBRAS_API_KEY), model="llama-4-scout-17b-16e-instruct", temperature=0.5)
     elif LLM_PROVIDER == "groq":
         if not GROQ_API_KEY:
             raise ValueError("GROQ_API_KEY is not set in environment.")
-        return ChatGroq(api_key=GROQ_API_KEY, model="meta-llama/llama-4-scout-17b-16e-instruct", temperature=0.5)
+        return ChatGroq(api_key=SecretStr(GROQ_API_KEY), model="meta-llama/llama-4-scout-17b-16e-instruct", temperature=0.5)
     else:
         return ChatOllama(model="llama3.1:latest", temperature=0.5)
 
@@ -100,18 +100,18 @@ prompt = PromptTemplate(
     partial_variables={"format_instructions": parser.get_format_instructions()}
 )
 
-async def generate_article(topic: str, additional_context: str = "", audience: str = "") -> BlogArticle:
-    try:
-        _prompt = prompt.format(topic=topic, additional_context=additional_context, audience=audience)
-        response = await llm.ainvoke([
-            {"role": "user", "content": _prompt}
-        ])
-        print("[LLM] response article.", response)
-        # Extract JSON if extra text is present
-        json_text = extract_json(response.content)
-        article = parser.parse(json_text)
-        print("[LLM] parsed article.", article)
-        return article
-    except Exception as e:
-        print("LLM error:", e)
-        raise
+# async def generate_article(topic: str, additional_context: str = "", audience: str = "") -> BlogArticle:
+#     try:
+#         _prompt = prompt.format(topic=topic, additional_context=additional_context, audience=audience)
+#         response = await llm.ainvoke([
+#             {"role": "user", "content": _prompt}
+#         ])
+#         print("[LLM] response article.", response)
+#         # Extract JSON if extra text is present
+#         json_text = extract_json(response.content)
+#         article = parser.parse(str(json_text))
+#         print("[LLM] parsed article.", article)
+#         return article
+#     except Exception as e:
+#         print("LLM error:", e)
+#         raise

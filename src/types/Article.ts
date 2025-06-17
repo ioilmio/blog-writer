@@ -5,6 +5,7 @@ export interface Article {
   slug: string;
   topic: string;
   tags: string[];
+  image_tags?: string[];
   content: string;
 }
 

@@ -7,6 +7,7 @@ from urllib.parse import quote
 import torch
 import clip
 from PIL import Image
+import json
 
 # --- CONFIG ---
 ARTICLE_ROOT = Path("blog-post")
@@ -217,6 +218,45 @@ def process_article(md_path, out_article_dir, out_image_dir):
     with open(out_path, "w", encoding="utf-8") as f:
         f.write(f"---\n{frontmatter}\n---\n{new_content}")
     print(f"[OK] {md_path} -> {out_path} (images: {img_count})")
+    # Save cache info for analytics and UI
+    cache_json_path = Path("image_cache.json")
+    cache = []
+    if cache_json_path.exists():
+        with open(cache_json_path, "r", encoding="utf-8") as f:
+            try:
+                cache = json.load(f)
+            except Exception:
+                cache = []
+    # Add all images in cache dir to cache.json with tags and scores
+    for img_file in image_cache_dir.glob("*.jpg"):
+        for tag in image_tags:
+            score = clip_score(img_file, tag)
+            cache.append({
+                "url": str(img_file),
+                "tags": [tag],
+                "clip_score": score,
+                "used": False,
+                "section": None
+            })
+    # Add used images
+    for section, (img_url, tag) in section_to_img.items():
+        cache.append({
+            "url": img_url,
+            "tags": [tag],
+            "clip_score": 1.0,  # Used images are always above threshold
+            "used": True,
+            "section": section
+        })
+    # Remove duplicates
+    seen = set()
+    unique_cache = []
+    for entry in cache:
+        key = (entry["url"], tuple(entry["tags"]))
+        if key not in seen:
+            unique_cache.append(entry)
+            seen.add(key)
+    with open(cache_json_path, "w", encoding="utf-8") as f:
+        json.dump(unique_cache, f, ensure_ascii=False, indent=2)
 
 def main():
     import sys
